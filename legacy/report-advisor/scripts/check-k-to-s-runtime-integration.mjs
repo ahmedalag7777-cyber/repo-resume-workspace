@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const must=(file,tokens)=>{if(!fs.existsSync(path.join(root,file))) throw new Error(`missing ${file}`); const s=read(file); for(const t of tokens) if(!s.includes(t)) throw new Error(`${file}: missing ${t}`)};
+must('src/lib/report-execution/production-coordinator-bridge.ts',['sourceHash','runProductionLifecycle','chooseScenario','prioritizeDecisions','canAutonomouslyExecute']);
+must('src/lib/phase-kl-supabase-runtime.ts',['recordHealth','recordEvidenceEdge','autonomyGate']);
+must('src/lib/report-execution/checkpoint.ts',['assertValidTransition','sourceHash']);
+must('src/lib/production-intelligence.ts',['evaluateAutonomyGate','selectBoundedScenario','rankPortfolio','calibrateConfidence']);
+must('scripts/check-production-readiness.mjs',['Production readiness contract: FAIL','missing']);
+const q=read('.github/workflows/quality.yml');
+for(const t of ['test:k-to-s-closure','test:k-to-s-deep-closure','test:phase-l-runtime']) if(!q.includes(t)) throw new Error(`quality missing ${t}`);
+console.log('K→S runtime integration gate: PASS');

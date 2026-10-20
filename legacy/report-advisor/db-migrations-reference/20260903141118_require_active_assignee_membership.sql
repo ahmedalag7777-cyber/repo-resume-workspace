@@ -1,0 +1,5 @@
+-- Migration-history reconciliation only.
+-- The canonical implementation is preserved in
+-- 20260903220000_require_active_assignee_membership.sql.
+-- This no-op file mirrors the remote migration version so Supabase Preview
+-- can reconcile remote history with the repository without replaying DDL.

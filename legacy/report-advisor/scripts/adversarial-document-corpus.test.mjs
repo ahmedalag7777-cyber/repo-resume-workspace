@@ -1,0 +1,2 @@
+import{strict as assert}from'node:assert';import{adversarialCorpus}from'./adversarial-document-corpus.mjs';
+assert.equal(adversarialCorpus.length,10);assert.equal(adversarialCorpus.find(x=>x.id==='truncated-pdf').expected,'QUARANTINE');assert.equal(adversarialCorpus.find(x=>x.id==='numeric-separator-chaos').expected,'PASS');for(const x of adversarialCorpus)assert.ok(['PASS','REVIEW','FALLBACK_OR_REVIEW','QUARANTINE'].includes(x.expected));console.log('Adversarial corpus tests PASS.');

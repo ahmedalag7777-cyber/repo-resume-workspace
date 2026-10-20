@@ -1,0 +1,2 @@
+import {verifyEvidenceArtifact} from './production-evidence-artifact.mjs';
+export function evaluateEvidenceRelease({artifacts=[],requiredCapabilities=[]}){const valid=artifacts.filter(verifyEvidenceArtifact);const covered=new Set(valid.map(a=>a.capability));const missing=requiredCapabilities.filter(id=>!covered.has(id));return{approved:missing.length===0&&valid.length===artifacts.length,artifactCount:artifacts.length,validCount:valid.length,missingCapabilities:missing};}

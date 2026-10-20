@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+const finite = (v) => typeof v === 'number' && Number.isFinite(v);
+const nonNegative = (v) => finite(v) ? Math.max(0, v) : 0;
+const paid = nonNegative;
+const history = (xs) => xs.map(nonNegative);
+const total = (rows, key) => rows.reduce((s, r) => s + nonNegative(r[key]), 0);
+const outstanding = (totalValue, paidValue) => Math.max(0, nonNegative(totalValue) - paid(paidValue));
+assert.equal(nonNegative(-1), 0);
+assert.equal(nonNegative(NaN), 0);
+assert.equal(nonNegative(Infinity), 0);
+assert.equal(nonNegative(4), 4);
+assert.equal(paid(-3), 0);
+assert.equal(outstanding(100, -3), 100);
+assert.equal(outstanding(100, 120), 0);
+assert.equal(outstanding(-10, 0), 0);
+assert.deepEqual(history([1, -2, NaN, Infinity, 3]), [1, 0, 0, 0, 3]);
+assert.equal(total([{stock:-2},{stock:5},{stock:NaN}], 'stock'), 5);
+console.log('canonical intelligence boundary invariants: PASS');

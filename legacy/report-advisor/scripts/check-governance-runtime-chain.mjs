@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const files=['supabase/migrations/20260825100000_autonomous_governance_business_intelligence.sql','supabase/migrations/20260825110000_governance_intelligence_hardening.sql','src/lib/phase-kl-runtime.ts','src/lib/production-intelligence.ts'];
+for(const f of files) if(!fs.existsSync(path.join(root,f))) throw new Error(`Missing governance runtime component: ${f}`);
+const sql=files.slice(0,2).map(f=>fs.readFileSync(path.join(root,f),'utf8')).join('\n');
+const runtime=fs.readFileSync(path.join(root,files[2]),'utf8');
+const intelligence=fs.readFileSync(path.join(root,files[3]),'utf8');
+for(const t of ['governance_policies','business_intelligence_decisions','governance_alerts','business_risk_budgets','decision_graph','anomaly_correlations','human_override_feedback','intelligence_quality_scores','governed_scenarios']) if(!sql.includes(t)) throw new Error(`Governance primitive missing: ${t}`);
+for(const t of ['evidenceQuality','canAutonomouslyExecute']) if(!runtime.includes(t)) throw new Error(`Governance-to-autonomy runtime link missing: ${t}`);
+for(const t of ['riskBudgetValid','trustHealthy','evidenceQuality','criticalDrift','rollbackVerified','isolationVerified']) if(!intelligence.includes(t)) throw new Error(`Governance autonomy primitive missing: ${t}`);
+if(!runtime.includes('evaluateAutonomyGate')) throw new Error('Governance runtime must delegate to canonical autonomy gate');
+if(/GRANT\s+ALL\s+TO\s+anon/i.test(sql)) throw new Error('Unsafe anonymous governance grant detected');
+console.log('Governance runtime chain: PASS');

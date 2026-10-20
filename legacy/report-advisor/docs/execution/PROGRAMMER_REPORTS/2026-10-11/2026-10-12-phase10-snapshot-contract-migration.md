@@ -1,0 +1,7 @@
+# Execution Checkpoint — 2026-10-12 / Phase-10 Shared Snapshot Contract
+
+PR #912 OPEN / NOT MERGED. Implementation commit: 94d75b29125d5fc208a1e3e085e28641733b6fd5. PRODUCT_COMPLETE=NO.
+
+On head 29d96, Quality and Final Certification failed because Phase-10 contract assertions still required retired code (timestamp via exactSnapshotSql, separate count read, two-argument dump to runnerSource). That conflicts with the single-exported-snapshot correction. Commit 94d75b29125d5fc208a1e3e085e28641733b6fd5 re-expresses the contract as stronger checks for the implemented safety model: IPv4-safe Transaction Pooler querySource, snapshot export through the helper, count manifest imported from that snapshot, pg_dump bound to the same ID with --serializable-deferrable, post-dump drift diagnostic, and exporter cleanup in finally. The helper must still use SERIALIZABLE READ ONLY DEFERRABLE, pg_export_snapshot(), and importer SET TRANSACTION SNAPSHOT. Original exclusions, strict restore parity, and production gates remain.
+
+A build passed on prior head 29d96. Phase-F there reached live resilience probes; inspect terminal result separately. No live restore PASS on new head is established yet. Real-source matrix remains 23/48, 25 NOT_PROVEN due missing eligible real source fields. Next: publish docs child and rerun/read Phase-F, build, quality, full authenticated browser source matrix, final certification.

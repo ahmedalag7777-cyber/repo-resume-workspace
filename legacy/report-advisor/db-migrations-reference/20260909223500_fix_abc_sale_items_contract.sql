@@ -1,0 +1,14 @@
+-- sale_items is tenant-scoped through its invoice; it has no company_id column.
+CREATE OR REPLACE FUNCTION public.get_abc_snapshot(p_limit integer DEFAULT 500)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path TO 'public' AS $$
+DECLARE v_company_id uuid:=public.current_company_id(); v_currency text; v_mismatch bigint; v_limit integer:=least(greatest(coalesce(p_limit,500),1),500); v_unknown bigint; v_rows jsonb; v_total numeric; v_status text;
+BEGIN
+ IF v_company_id IS NULL THEN RAISE EXCEPTION 'TENANT_CONTEXT_REQUIRED'; END IF;
+ SELECT c.currency INTO v_currency FROM public.companies c WHERE c.id=v_company_id;
+ SELECT count(*) FILTER(WHERE si.currency IS NOT NULL AND v_currency IS NOT NULL AND si.currency<>v_currency) INTO v_mismatch FROM public.sales_invoices si WHERE si.company_id=v_company_id AND si.status NOT IN ('cancelled','void');
+ IF v_mismatch>0 THEN RETURN jsonb_build_object('rows','[]'::jsonb,'totalRevenue',null,'unknownRows',0,'status','INSUFFICIENT_DATA','currency',v_currency,'currency_status','INSUFFICIENT_DATA','currency_mismatch_rows',v_mismatch); END IF;
+ WITH raw AS (SELECT item.product_id,item.line_total,p.name product_name FROM public.sale_items item JOIN public.sales_invoices si ON si.id=item.invoice_id AND si.company_id=v_company_id LEFT JOIN public.products p ON p.id=item.product_id AND p.company_id=v_company_id WHERE si.status NOT IN ('cancelled','void')), valid AS (SELECT * FROM raw WHERE product_id IS NOT NULL AND product_name IS NOT NULL AND line_total IS NOT NULL), agg AS (SELECT product_id,max(product_name) product_name,sum(line_total)::numeric revenue FROM valid GROUP BY product_id), ranked AS (SELECT a.*,sum(revenue) over(order by revenue desc,product_id rows unbounded preceding) cumulative,sum(revenue) over() total_revenue FROM agg a), final_rows AS (SELECT product_id,product_name,revenue,cumulative,case when total_revenue=0 then null else cumulative/total_revenue*100 end cumulative_pct,case when total_revenue=0 then null when cumulative/total_revenue*100<=80 then 'A' when cumulative/total_revenue*100<=95 then 'B' else 'C' end class FROM ranked ORDER BY revenue DESC,product_id LIMIT v_limit) SELECT (SELECT count(*) FILTER(where product_id IS NULL OR product_name IS NULL OR line_total IS NULL) FROM raw),coalesce((SELECT jsonb_agg(to_jsonb(fr)) FROM final_rows fr),'[]'::jsonb),coalesce((SELECT sum(revenue) FROM agg),0),case when coalesce((SELECT sum(revenue) FROM agg),0)<=0 OR NOT EXISTS(select 1 from valid) then 'INSUFFICIENT_DATA' else 'CALCULATED' end INTO v_unknown,v_rows,v_total,v_status;
+ RETURN jsonb_build_object('rows',v_rows,'totalRevenue',v_total,'unknownRows',v_unknown,'status',v_status,'currency',v_currency,'currency_status','CONSISTENT','currency_mismatch_rows',0);
+END; $$;
+REVOKE ALL ON FUNCTION public.get_abc_snapshot(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_abc_snapshot(integer) TO authenticated;

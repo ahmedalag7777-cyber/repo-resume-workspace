@@ -1,0 +1,3 @@
+import{strict as assert}from'node:assert';import{scoreLayoutFidelity,shouldFallback}from'./layout-table-fidelity.mjs';
+const ok=scoreLayoutFidelity({sourcePages:2,extractedPages:2,sourceTables:3,extractedTables:3,sourceRows:100,extractedRows:100});assert.equal(ok.valid,true);assert.equal(ok.score,1);assert.equal(shouldFallback(ok),false);
+const loss=scoreLayoutFidelity({sourcePages:2,extractedPages:2,sourceTables:3,extractedTables:2,sourceRows:100,extractedRows:70});assert.equal(loss.valid,false);assert.ok(loss.losses.includes('TABLE_LOSS'));assert.ok(loss.losses.includes('ROW_LOSS'));assert.equal(shouldFallback(loss),true);console.log('Layout/table fidelity tests PASS.');

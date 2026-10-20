@@ -1,0 +1,2 @@
+import{describe,expect,it}from'vitest';import{buildImpactPlan,mergeImpactPlans}from'./report-dependency-graph';
+describe('report-dependency-graph',()=>{it('maps sales changes to demand and decisions',()=>{const p=buildImpactPlan('sales');expect(p.affected).toContain('demand');expect(p.affected).toContain('purchaseDecision');});it('deduplicates impacted intelligence nodes',()=>{const n=mergeImpactPlans(['sales','inventory','purchases']);expect(new Set(n).size).toBe(n.length);expect(n).toContain('purchaseDecision');});});

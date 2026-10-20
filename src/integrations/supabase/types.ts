@@ -14,16 +14,205 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analyses: {
+        Row: {
+          archetype: string | null
+          available_count: number
+          column_count: number
+          created_at: string
+          domain: string | null
+          engine_version: string
+          file_hash: string | null
+          file_name: string
+          id: string
+          quality_score: number | null
+          result: Json
+          row_count: number
+          user_id: string
+        }
+        Insert: {
+          archetype?: string | null
+          available_count?: number
+          column_count?: number
+          created_at?: string
+          domain?: string | null
+          engine_version: string
+          file_hash?: string | null
+          file_name: string
+          id?: string
+          quality_score?: number | null
+          result: Json
+          row_count?: number
+          user_id?: string
+        }
+        Update: {
+          archetype?: string | null
+          available_count?: number
+          column_count?: number
+          created_at?: string
+          domain?: string | null
+          engine_version?: string
+          file_hash?: string | null
+          file_name?: string
+          id?: string
+          quality_score?: number | null
+          result?: Json
+          row_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      decisions: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          finding_id: string
+          id: string
+          note: string | null
+          user_id: string
+          verdict: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          finding_id: string
+          id?: string
+          note?: string | null
+          user_id?: string
+          verdict: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          finding_id?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decisions_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mapping_feedback: {
+        Row: {
+          created_at: string
+          field: string
+          header_norm: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          header_norm: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          header_norm?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      work_tasks: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          detail: string | null
+          due_date: string | null
+          finding_id: string | null
+          id: string
+          outcome_note: string | null
+          priority: string
+          role: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          detail?: string | null
+          due_date?: string | null
+          finding_id?: string | null
+          id?: string
+          outcome_note?: string | null
+          priority?: string
+          role: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          detail?: string | null
+          due_date?: string | null
+          finding_id?: string | null
+          id?: string
+          outcome_note?: string | null
+          priority?: string
+          role?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_tasks_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +339,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

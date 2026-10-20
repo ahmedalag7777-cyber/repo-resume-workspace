@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const quality=fs.readFileSync(path.join(root,'.github/workflows/quality.yml'),'utf8');
+const boundary=fs.readFileSync(path.join(root,'.github/workflows/production-evidence-boundary.yml'),'utf8');
+const requiredQuality=['test:master-requirements','test:production-certification-contract','test:continuous-trust','test:phase-k-runtime','test:phase-l-runtime','test:phase-m-certification','test:production-release-blockers','test:production-scale','test:document-resilience'];
+for(const x of requiredQuality) if(!quality.includes(x)) throw new Error(`Quality chain missing ${x}`);
+for(const x of ['check-live-production-evidence-boundary.mjs','check-production-evidence-failclosed.mjs','check-master-duplication-budget.mjs','check-production-release-blockers.mjs','check-production-certification-contract.mjs','actions/download-artifact@v4','consumption-proof.json']) if(!boundary.includes(x)) throw new Error(`Production boundary missing ${x}`);
+if(!quality.includes('branches: [main]')) throw new Error('Quality main branch trigger missing');
+if(!boundary.includes('workflow_run:')) throw new Error('Production boundary must consume release workflow evidence');
+if(!boundary.includes('workflows: [release-certification]')) throw new Error('Production boundary release workflow binding missing');
+if(!boundary.includes("github.event.workflow_run.conclusion == 'success'")) throw new Error('Production boundary must reject unsuccessful certification runs');
+if(boundary.includes('push:\n    branches: [main]')) throw new Error('Production boundary must not accept an unbound main push');
+console.log('Quality-to-production chain: PASS');

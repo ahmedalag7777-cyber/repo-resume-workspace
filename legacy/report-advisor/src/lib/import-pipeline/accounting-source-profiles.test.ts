@@ -1,0 +1,2 @@
+import {describe,expect,it} from 'vitest'; import {matchAccountingSource} from './accounting-source-profiles';
+describe('accounting-source-profiles',()=>{it('recognizes an Onyx Pro shaped report',()=>{const r=matchAccountingSource(['رقم الصنف','الكمية','رقم العميل','المخزن']);expect(r[0].profile.source).toBe('onyx-pro');expect(r[0].score).toBe(1);});it('requires review for weak source evidence',()=>{const r=matchAccountingSource(['رقم الصنف']);expect(r[0].reviewRequired).toBe(true);});});

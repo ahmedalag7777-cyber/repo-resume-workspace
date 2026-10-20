@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const files=['.github/workflows/phase-f-live-resilience.yml','.github/workflows/release-certification.yml','scripts/check-production-release-blockers.mjs','scripts/check-production-certification-contract.mjs','scripts/check-release-workflow-contract.mjs','scripts/check-continuous-trust-contract.mjs'];
+for(const file of files) if(!fs.existsSync(path.join(root,file))) throw new Error(`Live gate file missing: ${file}`);
+const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+const scripts=['test:production-release-blockers','test:production-certification-contract','test:operational-resilience','test:release-resilience-manifest','test:continuous-trust','test:phase-f-runtime-closure','test:phase-g-release-closure','test:phase-k-production-intelligence','test:phase-l-runtime','test:phase-m-certification'];
+for(const s of scripts) if(!pkg.scripts?.[s]) throw new Error(`Live gate package script missing: ${s}`);
+const release=fs.readFileSync(path.join(root,'.github/workflows/release-certification.yml'),'utf8');
+for(const token of ['staging','production','source_sha','migrations_fingerprint','artifact_fingerprint','actions/upload-artifact@v4']) if(!release.includes(token)) throw new Error(`Release evidence invariant missing: ${token}`);
+const phaseF=fs.readFileSync(path.join(root,'.github/workflows/phase-f-live-resilience.yml'),'utf8');
+for(const token of ['workflow_dispatch','phase-f-live-resilience-probes.mjs']) if(!phaseF.includes(token)) throw new Error(`Phase F live invariant missing: ${token}`);
+if(!phaseF.includes('npm run test:operational-resilience') && !phaseF.includes('check-operational-resilience-contract.mjs')) throw new Error('Phase F live workflow must execute operational resilience contracts');
+console.log('Live gate manifest integrity: PASS');

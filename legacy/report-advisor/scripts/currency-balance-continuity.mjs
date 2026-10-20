@@ -1,0 +1,2 @@
+export function isolateCurrencies(rows=[]){const groups=new Map();for(const r of rows){const currency=String(r.currency??'UNKNOWN').trim();if(!groups.has(currency))groups.set(currency,[]);groups.get(currency).push(r);}return Object.fromEntries(groups);}
+export function checkBalanceContinuity(rows=[]){const errors=[];let previous=null;for(let i=0;i<rows.length;i++){const r=rows[i];if(previous!==null&&Number(r.opening)!==Number(previous.closing))errors.push({row:i+1,code:'OPENING_MISMATCH'});previous=r;}return{valid:errors.length===0,errors};}

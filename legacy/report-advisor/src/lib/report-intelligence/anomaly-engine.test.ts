@@ -1,0 +1,2 @@
+import{describe,expect,it}from'vitest';import{detectFinancialAnomalies}from'./anomaly-engine';
+describe('anomaly-engine',()=>{it('ranks balance mismatch as high risk',()=>expect(detectFinancialAnomalies({balanceDifference:100})[0].severity).toBe('high'));it('detects duplicate and missing evidence',()=>{const r=detectFinancialAnomalies({duplicate:true,missing:true});expect(r.map(x=>x.kind)).toEqual(['missing','duplicate']);});it('protects currency boundaries',()=>expect(detectFinancialAnomalies({currencyConflict:true})[0].kind).toBe('currency_conflict'));});

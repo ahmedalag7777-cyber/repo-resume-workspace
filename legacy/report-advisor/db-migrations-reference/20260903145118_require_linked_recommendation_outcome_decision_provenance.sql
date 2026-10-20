@@ -1,0 +1,5 @@
+-- Migration-history reconciliation only.
+-- This remote migration version was applied by the controlled provenance
+-- hardening step represented by the canonical recommendation-outcome
+-- migration already present in this repository.
+-- No DDL is replayed here; this file mirrors the remote migration version.

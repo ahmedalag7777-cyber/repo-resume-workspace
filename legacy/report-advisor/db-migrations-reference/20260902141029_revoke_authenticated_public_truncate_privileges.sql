@@ -1,0 +1,1 @@
+REVOKE TRUNCATE ON ALL TABLES IN SCHEMA public FROM anon, authenticated;

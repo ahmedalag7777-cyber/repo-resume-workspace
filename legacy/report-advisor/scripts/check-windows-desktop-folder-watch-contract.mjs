@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const files=['desktop/main.cjs','desktop/preload.cjs','desktop/package.json'];
+for(const file of files)if(!fs.existsSync(path.join(process.cwd(),file)))throw new Error(`Missing Windows desktop file: ${file}`);
+const main=fs.readFileSync(path.join(process.cwd(),'desktop/main.cjs'),'utf8');
+const preload=fs.readFileSync(path.join(process.cwd(),'desktop/preload.cjs'),'utf8');
+const pkg=fs.readFileSync(path.join(process.cwd(),'desktop/package.json'),'utf8');
+for(const token of ['fs.watch','recursive:true','WATCH_FOLDER_PATH_OUTSIDE_ROOT','read-file','desktop-folder-watch:file','queueFileCandidate','handleFilesystemEvent','void rescan();','scheduleEventRescan','stableSince','requiredStableMs=400','watchGeneration','activeRescanPromise','const latest=new Set(walk(root))'])if(!main.includes(token))throw new Error(`Missing native watcher safety token: ${token}`);
+if(!main.includes('setInterval(()=>{void rescan();}'))throw new Error('Missing native watcher polling token');
+if(!main.includes('30000'))throw new Error('Missing production watcher polling interval');
+if(!main.includes('process.env.REPORT_ADVISOR_NATIVE_SMOKE?100:30000'))throw new Error('Missing native smoke polling interval');
+if(!main.includes("appendFileSync(partial,'11\\n','utf8'),300"))throw new Error('Missing 300ms partial-write regression');
+for(const token of ['contextIsolation:true','nodeIntegration:false','desktopFolderWatch','readFile','onFile'])if(!(main+preload).includes(token))throw new Error(`Missing isolated bridge token: ${token}`);
+for(const token of ['selectedRoot','desktop-folder-watch:start\',()=>startWatch()','realpath(watchedRoot)','realpath(resolved)','relativePath','configPath','persistSelectedRoot','get-selected','forget','waitForStableFile','WATCH_FILE_STILL_WRITING'])if(!main.includes(token))throw new Error(`Missing native IPC/reliability token: ${token}`);
+if(main.includes("startWatch(root)=>startWatch(root)"))throw new Error('Native watcher must not accept an arbitrary renderer-supplied root');
+if(main.includes("send('desktop-folder-watch:file',{path:filePath"))throw new Error('Native watcher must not expose absolute file paths to the renderer');
+for(const token of ['electron','electron-builder','package:win','com.reportadvisor.desktop'])if(!pkg.includes(token))throw new Error(`Missing Windows packaging token: ${token}`);
+console.log('Windows desktop watched-folder contract: PASS');

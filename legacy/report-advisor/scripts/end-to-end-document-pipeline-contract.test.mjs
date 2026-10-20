@@ -1,0 +1,3 @@
+import{strict as assert}from'node:assert';import{runPipeline}from'./end-to-end-document-pipeline-contract.mjs';
+const base={extraction:{valid:true},classification:{accepted:true},mapping:{valid:true},conflicts:{valid:true},arithmetic:{valid:true},reconciliation:{valid:true}};
+assert.equal(runPipeline(base).decision,'PASS');assert.equal(runPipeline({...base,extraction:{valid:false}}).decision,'QUARANTINE');assert.equal(runPipeline({...base,classification:{accepted:false}}).decision,'REVIEW');assert.equal(runPipeline({...base,arithmetic:{valid:false}}).stage,'arithmetic');assert.equal(runPipeline({...base,reconciliation:{valid:false}}).reason,'RECONCILIATION_FAILED');console.log('End-to-end document pipeline contract tests PASS.');

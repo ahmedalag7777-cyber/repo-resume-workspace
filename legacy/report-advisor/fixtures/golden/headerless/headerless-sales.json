@@ -1,0 +1,1 @@
+{"name":"headerless-sales","rows":[["1001","2026-08-01","250","12500"],["1002","2026-08-02","120","11800"]],"expectedCanonical":["sku","date","quantity","unit_price"]}

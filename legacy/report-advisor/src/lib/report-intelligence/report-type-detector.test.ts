@@ -1,0 +1,2 @@
+import{describe,expect,it}from'vitest';import{detectReportType}from'./report-type-detector';
+describe('report-type-detector',()=>{it('detects inventory reports',()=>expect(detectReportType(['productCode','productName','currentStock']).type).toBe('inventory'));it('detects sales reports',()=>expect(detectReportType(['productCode','quantity','netAmount']).type).toBe('sales'));it('rejects weak signatures',()=>expect(detectReportType(['productName']).type).toBe('unknown'));});

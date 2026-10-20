@@ -1,0 +1,1 @@
+{"name":"onyx-items","rows":[{"رقم الصنف":"1001","اسم الصنف":"دقيق أبو 50","المخزن":"الرئيسي","الكمية":"250","السعر":"12500"}],"expectedCanonical":["sku","item_name","warehouse","quantity","unit_price"]}

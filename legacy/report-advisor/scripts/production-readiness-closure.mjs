@@ -1,0 +1,4 @@
+import {productionReadiness} from './production-readiness-manifest.mjs';
+const requiredDomains=['foundation','files','intelligence','finance','safety','performance','release'];
+export function evaluateReadiness(statuses={}){const missing=[];const incomplete=[];for(const d of requiredDomains){if(!productionReadiness[d])missing.push(d);const checks=productionReadiness[d]??[];for(const c of checks){if(statuses[`${d}.${c}`]!==true)incomplete.push(`${d}.${c}`);}}return{approved:missing.length===0&&incomplete.length===0,missing,incomplete,domains:requiredDomains.length};}
+if(process.argv[1]?.endsWith('production-readiness-closure.mjs')){const all={};for(const d of requiredDomains)for(const c of productionReadiness[d])all[`${d}.${c}`]=true;const r=evaluateReadiness(all);if(!r.approved)process.exit(1);console.log(`Production readiness closure PASS: ${r.domains} domains fully satisfied.`);}

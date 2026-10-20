@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const dir=path.join(root,'.github/workflows');
+const files=fs.readdirSync(dir).filter(f=>f.endsWith('.yml')||f.endsWith('.yaml'));
+if(!files.length) throw new Error('No GitHub workflows found');
+const text=files.map(f=>fs.readFileSync(path.join(dir,f),'utf8')).join('\n');
+const required=['quality.yml','production-evidence-boundary.yml'];
+for(const f of required) if(!files.includes(f)) throw new Error(`Critical workflow missing: ${f}`);
+for(const token of ['pull_request','push','workflow_dispatch']) if(!text.includes(token)) throw new Error(`Workflow trigger coverage missing: ${token}`);
+for(const token of ['permissions: {contents: read}','persist-credentials: false']) if(!text.includes(token)) throw new Error(`Workflow hardening missing: ${token}`);
+console.log(`Workflow trigger integrity: PASS (${files.length} workflows)`);
