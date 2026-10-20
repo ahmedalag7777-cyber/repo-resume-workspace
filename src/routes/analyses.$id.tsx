@@ -69,7 +69,7 @@ function AnalysisPage() {
   const decide = async (findingId: string, verdict: "approved" | "rejected") => {
     const { data: sess } = await supabase.auth.getSession();
     const uid = sess.session?.user.id;
-    if (!uid) return toast.error("سجّل دخولك أولاً");
+    if (!uid) { toast.error("سجّل دخولك أولاً"); return; }
     const { error } = await supabase.from("decisions").upsert(
       { user_id: uid, analysis_id: row.id, finding_id: findingId, verdict },
       { onConflict: "analysis_id,finding_id" },

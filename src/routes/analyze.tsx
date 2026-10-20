@@ -40,7 +40,7 @@ function AnalyzePage() {
       setStatus("جارٍ قراءة الملف…");
       const tables = await parseFile(file);
       if (!tables.length) throw new Error("لم يتم العثور على جدول بيانات في الملف");
-      const table = tables[0];
+      const table = tables[0]!;
 
       setStatus("جارٍ التحليل الذكي…");
       const hash = await sha256(file);
