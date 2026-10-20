@@ -1,3 +1,4 @@
+import { SiteHeader } from "@/components/site-header";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -92,15 +93,7 @@ function AnalysisPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Link to="/" className="text-lg font-bold text-foreground">مستشار التقارير</Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link to="/analyze" className="text-muted-foreground hover:text-foreground">تحليل جديد</Link>
-            <Link to="/tasks" className="text-muted-foreground hover:text-foreground">مهامي</Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="text-2xl font-bold text-foreground">{result.fileName}</h1>

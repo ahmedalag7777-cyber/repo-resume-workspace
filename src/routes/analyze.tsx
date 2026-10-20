@@ -1,3 +1,4 @@
+import { SiteHeader } from "@/components/site-header";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { UploadCloud, FileSpreadsheet, Loader2 } from "lucide-react";
@@ -107,24 +108,7 @@ function AnalyzePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Link to="/" className="text-lg font-bold text-foreground">مستشار التقارير</Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link to="/tasks" className="text-muted-foreground hover:text-foreground">مهامي</Link>
-            {user ? (
-              <button
-                onClick={() => supabase.auth.signOut()}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                خروج
-              </button>
-            ) : (
-              <Link to="/auth" className="text-muted-foreground hover:text-foreground">دخول</Link>
-            )}
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-2xl px-4 py-12">
         <h1 className="text-3xl font-bold text-foreground">تحليل تقرير جديد</h1>
