@@ -1,0 +1,1 @@
+{"name":"products-en","rows":[{"SKU":"1001","Product Name":"Flour 50kg","Unit":"Bag","Unit Price":"12500"},{"SKU":"1002","Product Name":"Rice 40kg","Unit":"Bag","Unit Price":"11800"}],"expectedCanonical":["sku","item_name","unit","unit_price"]}

@@ -1,0 +1,2 @@
+import {describe,expect,it} from 'vitest'; import {mapHeaders} from './header-mapping-engine';
+describe('header-mapping-engine',()=>{it('auto maps trusted dictionary headers',()=>{const r=mapHeaders(['رقم الصنف','سعر البيع','الكمية']);expect(r.every(x=>x.needsReview===false)).toBe(true);expect(r[0].confidence).toBe(.99);});it('routes ambiguous headers to review',()=>{const r=mapHeaders(['سعر الصنف المتوقع','حقل غامض']);expect(r[0].needsReview).toBe(true);expect(r[1].needsReview).toBe(true);});});

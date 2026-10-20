@@ -1,0 +1,3 @@
+const arabicDigits='٠١٢٣٤٥٦٧٨٩', persianDigits='۰۱۲۳۴۵۶۷۸۹';
+export function normalizeNumeric(value){if(value==null)return null;let s=String(value).trim();for(let i=0;i<10;i++){s=s.replaceAll(arabicDigits[i],String(i)).replaceAll(persianDigits[i],String(i));}s=s.replace(/[\u066C\u060C,\s_]/g,'');s=s.replace(/\u066B/g,'.');s=s.replace(/[()]/g,m=>m==='('?'-':'');if(s===''||!/^[-+]?\d+(?:\.\d+)?$/.test(s))return null;const n=Number(s);return Number.isFinite(n)?n:null;}
+export function nearlyEqual(a,b,tolerance=.01){const x=normalizeNumeric(a),y=normalizeNumeric(b);return x!==null&&y!==null&&Math.abs(x-y)<=tolerance;}

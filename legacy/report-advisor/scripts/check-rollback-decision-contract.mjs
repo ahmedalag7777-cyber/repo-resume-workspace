@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const required=['scripts/production-release-decision.mjs','scripts/check-release-decision-provenance.mjs','scripts/check-release-artifact-integrity.mjs'];
+for(const f of required) if(!fs.existsSync(path.join(root,f))) throw new Error(`Rollback contract dependency missing: ${f}`);
+const decision=fs.readFileSync(path.join(root,'scripts/production-release-decision.mjs'),'utf8');
+if(!decision.includes("'blocked'")) throw new Error('Release decision must have a blocked state');
+const provenance=fs.readFileSync(path.join(root,'scripts/check-release-decision-provenance.mjs'),'utf8');
+if(!provenance.includes('sourceSha')||!provenance.includes('dependencyFingerprint')||!provenance.includes('migrationsFingerprint')) throw new Error('Rollback decision lacks release provenance');
+console.log('ROLLBACK DECISION CONTRACT: PASS');

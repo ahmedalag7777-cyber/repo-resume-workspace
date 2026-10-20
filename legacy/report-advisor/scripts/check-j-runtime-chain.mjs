@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+const root=process.cwd();
+const files=['scripts/check-watched-report-pipeline-contract.mjs','scripts/check-business-control-plane-contract.mjs','src/lib/phase-kl-runtime.ts','src/lib/report-execution/checkpoint.ts','src/lib/report-execution/dead-letter.ts'];
+for(const f of files) if(!fs.existsSync(path.join(root,f))) throw new Error(`J runtime component missing: ${f}`);
+const text=files.map(f=>fs.readFileSync(path.join(root,f),'utf8')).join('\n').toLowerCase();
+for(const t of ['watched','incremental','reconciliation','canonical','provenance','checkpoint','resume','dead-letter']) if(!text.includes(t)) throw new Error(`J runtime invariant missing: ${t}`);
+const test=spawnSync(process.execPath,['--experimental-strip-types','scripts/dead-letter-runtime.test.ts'],{cwd:root,encoding:'utf8'});
+if(test.status!==0) throw new Error(`Dead-letter runtime test failed: ${test.stderr || test.stdout}`);
+if(!text.includes('duplicate')) throw new Error('J runtime invariant missing: duplicate-safe dead-letter semantics');
+console.log('J/J.1 runtime chain: PASS');

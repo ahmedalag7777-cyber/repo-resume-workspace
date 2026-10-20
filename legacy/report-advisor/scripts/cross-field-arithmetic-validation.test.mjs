@@ -1,0 +1,3 @@
+import{strict as assert}from'node:assert';import{validateArithmetic}from'./cross-field-arithmetic-validation.mjs';
+const ok=validateArithmetic({rows:[{q:'2',p:'10',t:'20'}],roles:{quantity:'q',price:'p',total:'t'}});assert.equal(ok.valid,true);
+const bad=validateArithmetic({rows:[{q:'2',p:'10',t:'19'},{o:'100',d:'20',c:'5',b:'114'}],roles:{quantity:'q',price:'p',total:'t',opening:'o',debit:'d',credit:'c',balance:'b'}});assert.equal(bad.valid,false);assert.equal(bad.errors.length,2);assert.equal(bad.errors[0].code,'QTY_PRICE_TOTAL_MISMATCH');assert.equal(bad.errors[1].code,'LEDGER_BALANCE_MISMATCH');console.log('Cross-field arithmetic validation tests PASS.');

@@ -1,0 +1,4 @@
+-- Migration-history reconciliation only.
+-- The canonical implementation is preserved in
+-- 20260903223000_harden_recommendation_outcome_decision_provenance.sql.
+-- No DDL is replayed here; this file mirrors the remote migration version.

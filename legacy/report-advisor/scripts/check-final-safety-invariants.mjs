@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const migrationDir=path.join(root,'supabase/migrations');
+const migrations=fs.readdirSync(migrationDir).filter(x=>x.endsWith('.sql')).map(x=>fs.readFileSync(path.join(migrationDir,x),'utf8')).join('\n');
+const required=['current_company_id()','ENABLE ROW LEVEL SECURITY','REVOKE ALL ON TABLE','WITH CHECK','is_continuous_trust_healthy','rollback','artifact_integrity','backup_restore'];
+for(const token of required) if(!migrations.includes(token)) throw new Error(`Global safety invariant missing: ${token}`);
+const files=['scripts/check-production-release-blockers.mjs','scripts/check-production-certification-contract.mjs','scripts/check-phase-m-certification-contract.mjs','scripts/check-autonomy-safety-chain.mjs'];
+for(const f of files) if(!fs.existsSync(path.join(root,f))) throw new Error(`Safety gate missing: ${f}`);
+if(/GRANT\s+ALL\s+TO\s+anon/i.test(migrations)) throw new Error('Global anonymous privilege escalation detected');
+console.log('Final safety invariants: PASS');

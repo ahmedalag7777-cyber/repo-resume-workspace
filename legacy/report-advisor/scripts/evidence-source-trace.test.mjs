@@ -1,0 +1,2 @@
+import{strict as assert}from'node:assert';import{buildEvidence,validateEvidence,evidenceForResult}from'./evidence-source-trace.mjs';
+const e=buildEvidence({sourceHash:'src',artifactHash:'txt',field:'الرصيد',row:4,column:3,page:2,start:100,end:115,value:'٧٩٫٢',normalizedValue:79.2,engine:'primary'});assert.equal(validateEvidence(e).valid,true);assert.equal(evidenceForResult({field:'الرصيد',row:4},[e]).length,1);assert.equal(validateEvidence({...e,sourceHash:''}).valid,false);console.log('Evidence source trace tests PASS.');

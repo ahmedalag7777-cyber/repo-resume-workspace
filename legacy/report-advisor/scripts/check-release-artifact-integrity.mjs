@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+const root=process.cwd();
+const sha256=x=>crypto.createHash('sha256').update(x).digest('hex');
+const pkgPath=path.join(root,'package.json');
+const lockPath=path.join(root,'package-lock.json');
+if(!fs.existsSync(pkgPath)||!fs.existsSync(lockPath)) throw new Error('Release artifact inputs missing');
+const pkg=JSON.parse(fs.readFileSync(pkgPath,'utf8'));
+const lock=fs.readFileSync(lockPath);
+const sourceSha=process.env.GITHUB_SHA;
+if(process.env.CI&&!sourceSha) throw new Error('Artifact integrity requires GITHUB_SHA in CI');
+const manifest={packageVersion:pkg.version,sourceSha:sourceSha||'local',dependencyFingerprint:sha256(lock)};
+const artifactFingerprint=sha256(JSON.stringify(manifest));
+if(!artifactFingerprint) throw new Error('Artifact fingerprint generation failed');
+console.log(JSON.stringify({contract:'release-artifact-integrity',...manifest,artifactFingerprint}));

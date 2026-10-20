@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const p=path.join(root,'release-manifest.json');
+if(!fs.existsSync(p)) throw new Error('Release manifest missing');
+const m=JSON.parse(fs.readFileSync(p,'utf8'));
+if(!m.generatedAt) throw new Error('Release evidence timestamp missing');
+const generated=Date.parse(m.generatedAt);
+if(!Number.isFinite(generated)) throw new Error('Invalid evidence timestamp');
+const maxAgeHours=Number(process.env.RELEASE_EVIDENCE_MAX_AGE_HOURS||24);
+const ageHours=(Date.now()-generated)/36e5;
+if(ageHours<0) throw new Error('Evidence timestamp is in the future');
+if(ageHours>maxAgeHours) throw new Error(`RELEASE STALE: evidence age ${ageHours.toFixed(2)}h exceeds ${maxAgeHours}h`);
+console.log(`RELEASE EVIDENCE FRESHNESS: PASS (${ageHours.toFixed(2)}h)`);

@@ -1,0 +1,2 @@
+export function scoreExtractionQuality({textConfidence=0,layoutScore=0,ocrConfidence=1,semanticConfidence=0,coverage=0}){const score=textConfidence*.2+layoutScore*.25+ocrConfidence*.15+semanticConfidence*.25+coverage*.15;return{score,level:score>=.9?'high':score>=.75?'medium':'low',trusted:score>=.9};}
+export function qualityDecision(q){if(q.trusted)return'PASS';if(q.score>=.75)return'FALLBACK_OR_REVIEW';return'QUARANTINE';}

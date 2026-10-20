@@ -1,0 +1,11 @@
+import {strict as assert} from 'node:assert';
+import {createEvidenceArtifact} from './production-evidence-artifact.mjs';
+import {evaluateEvidenceRelease} from './production-evidence-release-bridge.mjs';
+const a=createEvidenceArtifact({capability:'schema.header-aliases',commit:'abc',stage:'runtime',result:'PASS'});
+assert.equal(evaluateEvidenceRelease({artifacts:[a],requiredCapabilities:['schema.header-aliases']}).approved,true);
+const tampered={...a,result:'FAIL'};
+const blocked=evaluateEvidenceRelease({artifacts:[tampered],requiredCapabilities:['schema.header-aliases']});
+assert.equal(blocked.approved,false);assert.equal(blocked.validCount,0);
+const missing=evaluateEvidenceRelease({artifacts:[],requiredCapabilities:['schema.header-aliases']});
+assert.equal(missing.approved,false);assert.deepEqual(missing.missingCapabilities,['schema.header-aliases']);
+console.log('Production evidence release bridge tests PASS.');

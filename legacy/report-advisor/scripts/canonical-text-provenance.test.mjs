@@ -1,0 +1,3 @@
+import{strict as assert}from'node:assert';import{buildProvenance,validateFidelity}from'./canonical-text-provenance.mjs';
+const p=buildProvenance({sourceHash:'src1',sourceName:'statement.pdf',sourceType:'pdf',textHash:'txt1',engine:'docling',version:'1',pageCount:2,blocks:[{page:1,kind:'table'}]});const ok=validateFidelity({sourceHash:'src1',textHash:'txt1',extractedText:'row1',provenance:p});assert.equal(ok.valid,true);assert.equal(p.blocks[0].page,1);
+const bad=validateFidelity({sourceHash:'src2',textHash:'txt1',extractedText:'',provenance:p});assert.equal(bad.valid,false);assert.ok(bad.errors.includes('SOURCE_PROVENANCE_MISMATCH'));assert.ok(bad.errors.includes('EMPTY_CANONICAL_TEXT'));console.log('Canonical text provenance tests PASS.');

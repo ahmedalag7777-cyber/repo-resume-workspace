@@ -1,0 +1,2 @@
+import{strict as assert}from'node:assert';import{normalizeNumeric,nearlyEqual}from'./numeric-normalization-contract.mjs';
+assert.equal(normalizeNumeric('١٬٢٥٠٫٥٠'),1250.5);assert.equal(normalizeNumeric('1,250.50'),1250.5);assert.equal(normalizeNumeric('(125.5)'),-125.5);assert.equal(normalizeNumeric('bad'),null);assert.equal(nearlyEqual('١٠٠٫٠٠','100',.01),true);assert.equal(nearlyEqual('100','100.02',.01),false);console.log('Numeric normalization contract tests PASS.');

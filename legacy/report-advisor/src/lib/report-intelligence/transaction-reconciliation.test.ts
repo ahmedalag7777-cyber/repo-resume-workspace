@@ -1,0 +1,3 @@
+import{describe,expect,it}from'vitest';import{reconcileTransactions}from'./transaction-reconciliation';
+const p=[{key:'a',date:'2026-08-01',reference:'R1',debit:0,credit:100,currency:'YER'},{key:'b',date:'2026-08-02',reference:'R2',debit:50,credit:0,currency:'YER'}];
+describe('transaction-reconciliation',()=>{it('matches unchanged transactions',()=>expect(reconcileTransactions(p,[p[0],p[1]]).matched).toBe(2));it('flags amount conflicts',()=>expect(reconcileTransactions(p,[{...p[0],credit:120}]).conflicts).toBe(1));it('detects duplicate signatures and missing previous rows',()=>{const r=reconcileTransactions(p,[p[0],{...p[0],key:'x'}]);expect(r.duplicates).toBe(1);expect(r.missingPrevious).toBe(1);});});

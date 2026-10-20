@@ -1,0 +1,1 @@
+alter table public.decisions add constraint decisions_analysis_finding_unique unique (analysis_id, finding_id);

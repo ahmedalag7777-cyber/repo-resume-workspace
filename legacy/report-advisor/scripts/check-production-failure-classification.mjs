@@ -1,0 +1,4 @@
+const domains={typecheck:'toolchain',build:'build',lint:'quality',contracts:'architecture',import:'import',security:'security',report:'truth',performance:'performance',evidence:'decision'};
+const blocking=new Set(['typecheck','build','security','report','contracts']);
+export function classifyGateFailure(gate,error=''){const domain=domains[gate]??'unknown';const isBlocking=blocking.has(gate);return{gate,domain,severity:isBlocking?'blocking':'warning',recoverable:!isBlocking,action:isBlocking?'fix-and-rerun':'review-and-rerun',message:error||`Production gate ${gate} failed`};}
+if(process.argv[1]?.endsWith('check-production-failure-classification.mjs')){const required=['typecheck','build','security','performance','import','report'];for(const g of required){const r=classifyGateFailure(g);if(r.domain==='unknown'||!r.action)process.exit(1);}console.log('Production failure classification PASS.');}

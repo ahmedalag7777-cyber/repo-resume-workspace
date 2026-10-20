@@ -1,0 +1,6 @@
+-- Migration-lineage parity for the live Staging migration 20260916233349.
+-- The canonical Phase-L boundary is already present in source as
+-- 20260903033000_reconcile_phase_l_autonomy_runtime_boundary.sql.
+-- This migration intentionally performs no second schema mutation; it preserves
+-- the exact remote migration identifier so fresh replay and remote history converge
+-- without duplicating tables, indexes, policies, or runtime gate definitions.

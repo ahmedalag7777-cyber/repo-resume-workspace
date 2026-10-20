@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const filter=path.join(root,'src/lib/analytics/filter-context.ts');
+if(!fs.existsSync(filter)) throw new Error('Analytics filter context missing');
+const text=fs.readFileSync(filter,'utf8');
+for(const token of ['DashboardFilterContext','DashboardFilterKey','setDashboardFilter','parseDashboardFilterContext']) if(!text.includes(token)) throw new Error(`Filter context contract missing: ${token}`);
+if(/\[key\]/.test(text) && !text.includes('key:')) throw new Error('Unsafe generic filter indexing pattern detected');
+const quality=fs.readFileSync(path.join(root,'.github/workflows/quality.yml'),'utf8');
+if(!quality.includes('npm run typecheck')) throw new Error('Quality workflow lost typecheck gate');
+console.log('Known CI regression guard: PASS');

@@ -1,0 +1,3 @@
+import{strict as assert}from'node:assert';import{resolveSemanticRole,validateRoleSet}from'./semantic-role-resolution.mjs';
+assert.equal(resolveSemanticRole('exchange_statement','مدين').role,'debit');assert.equal(resolveSemanticRole('inventory','متوسط التكلفة').role,'cost');assert.equal(resolveSemanticRole('sales','صافي المبيعات').role,'sales');
+assert.equal(validateRoleSet('exchange_statement',{a:'debit',b:'credit',c:'balance'}).valid,true);assert.equal(validateRoleSet('exchange_statement',{a:'debit'}).valid,false);assert.deepEqual(validateRoleSet('exchange_statement',{a:'debit'}).missing,['credit','balance']);console.log('Semantic role resolution tests PASS.');

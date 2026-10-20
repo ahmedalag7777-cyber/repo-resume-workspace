@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();
+const files=['.github/workflows/quality.yml','.github/workflows/phase-f-live-resilience.yml','scripts/check-production-release-blockers.mjs','scripts/check-production-certification-contract.mjs','scripts/check-release-resilience-manifest.mjs'];
+const missing=files.filter(f=>!fs.existsSync(path.join(root,f))); if(missing.length) throw new Error(`Phase G release closure blockers:\n${missing.join('\n')}`);
+const quality=fs.readFileSync(path.join(root,'.github/workflows/quality.yml'),'utf8');
+for(const gate of ['test:production-release-blockers','test:production-certification-contract','test:release-resilience-manifest']) if(!quality.includes(gate)) throw new Error(`Quality release gate missing: ${gate}`);
+const blockers=fs.readFileSync(path.join(root,'scripts/check-production-release-blockers.mjs'),'utf8');
+for(const token of ['blocker','fail','production']) if(!blockers.toLowerCase().includes(token)) throw new Error(`Production blocker contract incomplete: ${token}`);
+console.log('Phase G release closure contract: PASS');
