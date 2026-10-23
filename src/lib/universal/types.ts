@@ -134,4 +134,5 @@ export interface AnalysisResult {
   preview: { headers: string[]; rows: Cell[][]; sourceRows: number[] };
   series: { period: string; value: number }[];
   segments: { name: string; value: number; count: number }[];
+  merchant?: import("./matrix").MerchantView | null;
 }
