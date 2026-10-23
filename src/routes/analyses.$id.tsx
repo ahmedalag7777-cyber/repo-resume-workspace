@@ -1,3 +1,4 @@
+import { MerchantPanel } from "@/components/merchant-panel";
 import { SiteHeader } from "@/components/site-header";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
@@ -120,6 +121,7 @@ function AnalysisPage() {
 
         {tab === "overview" && (
           <div className="mt-6 space-y-6">
+            {result.merchant && <MerchantPanel m={result.merchant} />}
             <section className="grid gap-4 md:grid-cols-3">
               <Stat label="رؤى مستخرجة" value={result.insights.length} />
               <Stat label="قدرات متاحة" value={result.capabilities.filter((c) => c.status === "AVAILABLE").length} />
