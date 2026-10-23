@@ -55,7 +55,7 @@ export function detectMatrix(t: RawTable) {
   for (let i = 0; i < t.headers.length && entity < 0; i++) {
     if (monthIdx.has(i)) continue;
     const vals = t.rows.map((r) => r[i]).filter((v) => v !== null && v !== "");
-    const texty = vals.filter((v) => toNumber(v) === null).length;
+    const texty = vals.filter((v) => typeof v === "string" && /[\p{L}]/u.test(v)).length;
     if (vals.length && texty / vals.length > 0.8 && new Set(vals.map(String)).size > vals.length * 0.5) entity = i;
   }
   if (entity < 0) return null;
