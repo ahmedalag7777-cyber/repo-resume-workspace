@@ -18,6 +18,6 @@ describe("monthly customer matrix", () => {
     expect(r.insights.some((i) => i.id === "mapping-review")).toBe(false);
   });
   it("detects new customers in the latest month", () => {
-    expect(r.merchant?.kpis.find((k) => k.label.includes("جدد"))?.value).toBe("1");
+    expect(r.merchant?.kpis.find((k) => k.label.includes("الجدد"))?.value).toBe("1");
   });
 });

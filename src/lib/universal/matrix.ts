@@ -72,6 +72,7 @@ export function analyzeMatrix(t: RawTable, fileName: string): MatrixResult | nul
   const isSupplier = /(مورد|supplier|vendor)/i.test(entityLabel + fileName);
   const isProduct = /(صنف|منتج|مادة|item|product|sku)/i.test(entityLabel + fileName);
   const noun = isCustomer ? "عميل" : isSupplier ? "مورد" : isProduct ? "صنف" : "بند";
+  const nounPl = isCustomer ? "العملاء" : isSupplier ? "الموردون" : isProduct ? "الأصناف" : "البنود";
   const owner: Role = isSupplier ? "purchasing" : isProduct ? "inventory" : "sales";
 
   type Ent = { name: string; row: number; vals: number[]; total: number; active: number; avg: number };
@@ -194,17 +195,17 @@ export function analyzeMatrix(t: RawTable, fileName: string): MatrixResult | nul
     kpis: [
       { label: "إجمالي الفترة", value: fmt(total), hint: `${mNames[0]} – ${mNames[L]}` },
       { label: `مبيعات ${mNames[L]}`, value: fmt(last), hint: `${mom >= 0 ? "+" : ""}${pctS(mom)} عن الشهر السابق`, tone: mom >= 0 ? "good" : "bad" },
-      { label: `${noun} نشطون الآن`, value: `${activeBy[L]} / ${ents.length}`, hint: `دائمون كل الأشهر: ${loyal.length}` },
+      { label: `${nounPl} النشطون الآن`, value: `${activeBy[L]} / ${ents.length}`, hint: `دائمون كل الأشهر: ${loyal.length}` },
       { label: "إيراد شهري مفقود", value: fmt(lostMonthly), hint: `${lost.length} ${noun} متوقف`, tone: lost.length ? "bad" : "good" },
       { label: "حصة أكبر 10", value: pctS(top10Share), hint: `فئة A: ${abc.A} ${noun}`, tone: top10Share > 0.5 ? "bad" : "neutral" },
-      { label: `${noun} جدد`, value: String(fresh.length), hint: `في ${mNames[L]}`, tone: "good" },
+      { label: `${nounPl} الجدد`, value: String(fresh.length), hint: `في ${mNames[L]}`, tone: "good" },
     ],
     lists: [
-      { title: `اتصل بهم اليوم — ${noun} متوقفون`, tone: "bad", note: "مرتبون حسب قيمة الشراء الشهرية المفقودة", rows: rows(lost, (e) => [fmt(e.avg) + " /شهر", `آخر شراء: ${mNames[Math.max(...e.vals.map((v, j) => (v > 0 ? j : -1)))]}`]) },
+      { title: `اتصل بهم اليوم — ${nounPl} المتوقفون`, tone: "bad", note: "مرتبون حسب قيمة الشراء الشهرية المفقودة", rows: rows(lost, (e) => [fmt(e.avg) + " /شهر", `آخر شراء: ${mNames[Math.max(...e.vals.map((v, j) => (v > 0 ? j : -1)))]}`]) },
       { title: "في خطر — انخفاض حاد", tone: "bad", note: `مشتريات ${mNames[L]} مقابل معدلهم`, rows: rows(risk, (e) => [fmt(e.vals[L]!), `معدله ${fmt(e.avg)}`]) },
-      { title: `أكبر ${noun} (فئة A)`, tone: "neutral", note: "الحصة من إجمالي الفترة", rows: rows(top10, (e) => [fmt(e.total), pctS(e.total / total)]) },
+      { title: `أكبر ${nounPl} (فئة A)`, tone: "neutral", note: "الحصة من إجمالي الفترة", rows: rows(top10, (e) => [fmt(e.total), pctS(e.total / total)]) },
       { title: "نجوم النمو", tone: "good", note: `${mNames[L]} مقابل المعدل`, rows: rows(stars, (e) => [fmt(e.vals[L]!), `معدله ${fmt(e.avg)}`]) },
-      { title: `${noun} جدد هذا الشهر`, tone: "good", note: "أول عملية شراء", rows: rows(fresh, (e) => [fmt(e.vals[L]!), "عميل جديد"]) },
+      { title: `${nounPl} الجدد هذا الشهر`, tone: "good", note: "أول عملية شراء", rows: rows(fresh, (e) => [fmt(e.vals[L]!), "عميل جديد"]) },
     ].filter((l) => l.rows.length),
   };
 
