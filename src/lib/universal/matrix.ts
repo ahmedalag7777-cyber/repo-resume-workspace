@@ -56,7 +56,7 @@ export function detectMatrix(t: RawTable) {
     if (monthIdx.has(i)) continue;
     const vals = t.rows.map((r) => r[i]).filter((v) => v !== null && v !== "");
     const texty = vals.filter((v) => typeof v === "string" && /[\p{L}]/u.test(v)).length;
-    if (vals.length && texty / vals.length > 0.8 && new Set(vals.map(String)).size > vals.length * 0.5) entity = i;
+    if (vals.length && texty / vals.length > 0.8 && new Set(vals.map((v) => String(v))).size > vals.length * 0.5) entity = i;
   }
   if (entity < 0) return null;
   return { months, entity };
@@ -77,7 +77,7 @@ export function analyzeMatrix(t: RawTable, fileName: string): MatrixResult | nul
 
   type Ent = { name: string; row: number; vals: number[]; total: number; active: number; avg: number };
   const all: Ent[] = t.rows.map((r, k) => {
-    const vals = d.months.map((m) => Math.max(0, toNumber(r[m.i]) ?? 0));
+    const vals = d.months.map((m) => Math.max(0, toNumber(r[m.i] ?? null) ?? 0));
     const total = vals.reduce((a, b) => a + b, 0);
     const active = vals.filter((v) => v > 0).length;
     return { name: String(r[d.entity] ?? "").trim(), row: t.sourceRows[k] ?? k + 2, vals, total, active, avg: active ? total / active : 0 };
@@ -201,11 +201,11 @@ export function analyzeMatrix(t: RawTable, fileName: string): MatrixResult | nul
       { label: `${nounPl} الجدد`, value: String(fresh.length), hint: `في ${mNames[L]}`, tone: "good" },
     ],
     lists: [
-      { title: `اتصل بهم اليوم — ${nounPl} المتوقفون`, tone: "bad", note: "مرتبون حسب قيمة الشراء الشهرية المفقودة", rows: rows(lost, (e) => [fmt(e.avg) + " /شهر", `آخر شراء: ${mNames[Math.max(...e.vals.map((v, j) => (v > 0 ? j : -1)))]}`]) },
-      { title: "في خطر — انخفاض حاد", tone: "bad", note: `مشتريات ${mNames[L]} مقابل معدلهم`, rows: rows(risk, (e) => [fmt(e.vals[L]!), `معدله ${fmt(e.avg)}`]) },
-      { title: `أكبر ${nounPl} (فئة A)`, tone: "neutral", note: "الحصة من إجمالي الفترة", rows: rows(top10, (e) => [fmt(e.total), pctS(e.total / total)]) },
-      { title: "نجوم النمو", tone: "good", note: `${mNames[L]} مقابل المعدل`, rows: rows(stars, (e) => [fmt(e.vals[L]!), `معدله ${fmt(e.avg)}`]) },
-      { title: `${nounPl} الجدد هذا الشهر`, tone: "good", note: "أول عملية شراء", rows: rows(fresh, (e) => [fmt(e.vals[L]!), "عميل جديد"]) },
+      { title: `اتصل بهم اليوم — ${nounPl} المتوقفون`, tone: "bad" as const, note: "مرتبون حسب قيمة الشراء الشهرية المفقودة", rows: rows(lost, (e) => [fmt(e.avg) + " /شهر", `آخر شراء: ${mNames[Math.max(...e.vals.map((v, j) => (v > 0 ? j : -1)))]}`]) },
+      { title: "في خطر — انخفاض حاد", tone: "bad" as const, note: `مشتريات ${mNames[L]} مقابل معدلهم`, rows: rows(risk, (e) => [fmt(e.vals[L]!), `معدله ${fmt(e.avg)}`]) },
+      { title: `أكبر ${nounPl} (فئة A)`, tone: "neutral" as const, note: "الحصة من إجمالي الفترة", rows: rows(top10, (e) => [fmt(e.total), pctS(e.total / total)]) },
+      { title: "نجوم النمو", tone: "good" as const, note: `${mNames[L]} مقابل المعدل`, rows: rows(stars, (e) => [fmt(e.vals[L]!), `معدله ${fmt(e.avg)}`]) },
+      { title: `${nounPl} الجدد هذا الشهر`, tone: "good" as const, note: "أول عملية شراء", rows: rows(fresh, (e) => [fmt(e.vals[L]!), "عميل جديد"]) },
     ].filter((l) => l.rows.length),
   };
 
