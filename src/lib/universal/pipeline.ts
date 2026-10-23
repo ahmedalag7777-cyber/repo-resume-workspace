@@ -2,6 +2,7 @@ import { detectReportArchetype } from "@/lib/report-intelligence/archetype-regis
 import { buildInsights, buildTasks, businessQuestions } from "./advise";
 import { derivedCapabilities, groupBy, periodSeries, runCapabilities, type Ctx } from "./capabilities";
 import { detectDomains, normHeader, pickRoles, profileColumns } from "./profile";
+import { analyzeMatrix } from "./matrix";
 import type { AnalysisResult, ArchetypeAcceleration, PipelineStage, RawTable } from "./types";
 
 export const ENGINE_VERSION = "universal-1.0.0";
@@ -42,7 +43,14 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   st("quality", "جودة البيانات", qualityScore >= 70 ? "done" : "review", `${qualityScore}/100`);
   st("truth", "الحقيقة", "done", "كل رقم مشتق من صفوف الملف مع رقم الصف");
   st("detect", "رصد القدرات", "done", `${caps.length} قدرة مفحوصة`);
-  const insights = buildInsights(ctx, caps);
+  const mx = analyzeMatrix(t, fileName);
+  let insights = buildInsights(ctx, caps);
+  if (mx) {
+    // Matrix reports: monthly columns are periods, not unknown fields; totals rows are not outliers.
+    insights = [...mx.insights, ...insights.filter((i) => !["mapping-review"].includes(i.id) && i.capability !== "outliers")];
+    archetype = { ...archetype, state: "MATCHED", reason: "MONTHLY_MATRIX", title: mx.merchant.kind };
+    st("matrix", "ذكاء شهري", "done", `${mx.merchant.kind}${mx.excludedTotalRows.length ? ` • استبعاد صف الإجمالي ${mx.excludedTotalRows.join("، ")}` : ""}`);
+  }
   const questions = businessQuestions(ctx, caps, archetype.decisionQuestions);
   const derived = derivedCapabilities(ctx, caps, {
     risks: insights.filter((i) => i.kind === "warning").length,
@@ -57,15 +65,15 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   const tasks = buildTasks(insights);
   st("decide", "قرار", "review", "بانتظار اعتمادك لكل توصية");
 
-  const series = periodSeries(ctx).map((s) => ({ period: s.period, value: s.value }));
+  const series = mx ? mx.series : periodSeries(ctx).map((s) => ({ period: s.period, value: s.value }));
   const segDim = roles.entity ?? roles.dimensions[0];
-  const segments = segDim ? groupBy(ctx, segDim, roles.measure).slice(0, 12).map((g) => ({ name: g.name, value: g.value, count: g.count })) : [];
+  const segments = mx ? mx.segments : segDim ? groupBy(ctx, segDim, roles.measure).slice(0, 12).map((g) => ({ name: g.name, value: g.value, count: g.count })) : [];
 
   return {
     engineVersion: ENGINE_VERSION, fileName, sheet: t.sheet, analyzedAt: new Date().toISOString(),
     rowCount: t.rows.length, columnCount: t.headers.length, columns: cols, roles, domains, qualityScore, archetype,
     capabilities, insights, tasks, stages,
     preview: { headers: t.headers, rows: t.rows.slice(0, 30), sourceRows: t.sourceRows.slice(0, 30) },
-    series, segments,
+    series, segments, merchant: mx?.merchant ?? null,
   };
 }
