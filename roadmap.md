@@ -8,8 +8,11 @@
 - [x] New premium visual system, home + auth redesign, shared header
 - [x] Verified: sign-up → upload fixture → analysis saved and displayed
 
-## Next
-- [ ] Port Report-Advisor screens (≈48: command center, decision inbox, executive/sales/purchases/inventory/profitability reports, analytics RFM/ABC/aging, data quality, master data, operations…) one group per phase
-- [ ] Admin panel (users list, roles) for the owner
-- [ ] Redesign inner pages (analysis tabs, tasks board) with charts/interactions
-- [ ] Outcome capture on tasks → learning; decision replay
+## Executive order (P0, 2026-10-24): Tooling-first before features
+Per أمر تنفيذي عاجل + Supplement V6: freeze feature work; INSPECT → RECONCILE → foundation tools → integrate+test → acceptance gate → then resume features. Budget $0, no paid paths, no silent paid fallback.
+
+- [ ] P0-A: Inventory current tooling vs required capabilities; reconciliation matrix (KEEP/EXTEND/INTEGRATE/REJECT/DEFER per capability) — in progress
+- [ ] P0-B: Integrate chosen foundation tools into the real pipeline (PDF text extraction, OCR fallback path decision, table structure, financial calc precision, data quality, semantic column dictionary, unified free-AI provider layer with paid paths blocked) + smoke tests
+- [ ] Acceptance gate: documented proof — tools kept/added/rejected with licenses, real wiring paths, real run tests, one end-to-end file→extract→verify→analyze path, zero-spend proof
+- [ ] P1: semantic column engine + relationship/formula inference on top of accepted tools
+- [ ] Then resume: port Report-Advisor screens, admin panel, inner-page redesign, outcome capture (deferred by the order)
