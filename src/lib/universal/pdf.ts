@@ -8,7 +8,7 @@ import type { RawTable } from "./types";
 export async function parsePdf(file: File, options: ParseOptions = {}): Promise<RawTable[]> {
   const pdfjs = await import("pdfjs-dist");
   pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-  const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false });
+  const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   const pdf = await task.promise;
   const tables: RawTable[] = [];
   try {
