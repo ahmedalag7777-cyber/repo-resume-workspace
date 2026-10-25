@@ -1,5 +1,5 @@
 import { SiteHeader } from "@/components/site-header";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { UploadCloud, FileSpreadsheet, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -7,13 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/use-session";
 import { parseFile, sha256 } from "@/lib/universal/parse";
 import { analyzeTable, reportSignature } from "@/lib/universal/pipeline";
-import type { AnalysisResult } from "@/lib/universal/types";
+import type { AnalysisResult, RawTable } from "@/lib/universal/types";
+import { SUPPORTED_FILE_ACCEPT } from "@/lib/universal/extraction";
+import { ExtractionReview } from "@/components/extraction-review";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/analyze")({
   head: () => ({
     meta: [
       { title: "تحليل تقرير جديد — مستشار التقارير" },
-      { name: "description", content: "ارفع ملف Excel أو CSV أو JSON واحصل على تحليل استشاري كامل بدليل من بياناتك." },
+      { name: "description", content: "حلل Excel وCSV وJSON، وراجع الجداول المستخرجة من PDF وWord والصور قبل اعتمادها." },
       { property: "og:title", content: "تحليل تقرير جديد — مستشار التقارير" },
       { property: "og:description", content: "ارفع ملفك واحصل على رؤى وتوصيات ومهام يومية." },
       { property: "og:type", content: "website" },
@@ -29,6 +32,8 @@ function AnalyzePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
+  const [pending, setPending] = useState<{ file: File; tables: RawTable[] } | null>(null);
+  const [selected, setSelected] = useState(0);
 
   const handleFile = async (file: File) => {
     if (!user) {
@@ -39,10 +44,20 @@ function AnalyzePage() {
     setBusy(true);
     try {
       setStatus("جارٍ قراءة الملف…");
-      const tables = await parseFile(file);
+      const tables = await parseFile(file, { onProgress: setStatus });
       if (!tables.length) throw new Error("لم يتم العثور على جدول بيانات في الملف");
-      const table = tables[0]!;
+      const table = tables[0];
+      if (!table) throw new Error("لم يتم العثور على جدول بيانات في الملف");
+      if (tables.length > 1 || table.extraction?.reviewRequired) {
+        setPending({ file, tables }); setSelected(0);
+      } else await saveAnalysis(file, table);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally { setBusy(false); setStatus(""); }
+  };
 
+  const saveAnalysis = async (file: File, table: RawTable) => {
+    if (!user) throw new Error("سجّل دخولك أولاً لحفظ التحليل");
       setStatus("جارٍ التحليل الذكي…");
       const hash = await sha256(file);
       const signature = reportSignature(table);
@@ -97,13 +112,17 @@ function AnalyzePage() {
       }
 
       toast.success("تم التحليل والحفظ بنجاح");
+      setPending(null);
       navigate({ to: "/analyses/$id", params: { id: row.id } });
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setBusy(false);
-      setStatus("");
-    }
+  };
+
+  const confirmTable = async () => {
+    const table = pending?.tables[selected];
+    if (!pending || !table) return;
+    setBusy(true);
+    try { await saveAnalysis(pending.file, table); }
+    catch (err) { toast.error((err as Error).message); }
+    finally { setBusy(false); setStatus(""); }
   };
 
   return (
@@ -113,14 +132,15 @@ function AnalyzePage() {
       <main className="mx-auto max-w-2xl px-4 py-12">
         <h1 className="text-3xl font-bold text-foreground">تحليل تقرير جديد</h1>
         <p className="mt-2 text-muted-foreground">
-          ارفع ملف Excel أو CSV أو JSON — أي نوع تقرير — وسيحلله المحرك ويخرج الرؤى والتوصيات والمهام.
+          Excel • CSV • JSON • PDF • Word • صور
         </p>
 
-        <button
+        {!pending && <Button
+          variant="outline"
           type="button"
           disabled={busy || loading}
           onClick={() => inputRef.current?.click()}
-          className="mt-8 flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card px-6 py-16 text-center transition-colors hover:border-primary hover:bg-accent disabled:opacity-60"
+          className="mt-8 flex h-auto w-full flex-col items-center justify-center gap-3 whitespace-normal rounded-lg border-2 border-dashed border-border bg-card px-6 py-16 text-center transition-colors hover:border-primary hover:bg-accent disabled:opacity-60 [&_svg]:size-10"
         >
           {busy ? (
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -132,13 +152,16 @@ function AnalyzePage() {
           </span>
           <span className="text-sm text-muted-foreground">
             <FileSpreadsheet className="ml-1 inline h-4 w-4" />
-            xlsx • xls • csv • json — بالعربية أو الإنجليزية
+            تقرير أعمال بالعربية أو الإنجليزية
           </span>
-        </button>
+        </Button>}
+        {pending && <ExtractionReview fileName={pending.file.name} tables={pending.tables} selected={selected}
+          onSelect={setSelected} onConfirm={confirmTable} onCancel={() => setPending(null)} busy={busy} />}
+        {pending && busy && <p className="mt-3 text-sm text-primary" role="status">{status}</p>}
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,.json,.xlsx,.xls"
+          accept={SUPPORTED_FILE_ACCEPT}
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
