@@ -29,6 +29,13 @@ describe("document foundation", () => {
     expect(tsvToGrid(tsv)).toEqual([["Customer", "Sales"], ["Ahmed", "125"]]);
   });
   it("does not turn entity identifiers into money", () => expect(toNumber("عميل 125")).toBeNull());
+  it("keeps OCR headers with unequal word heights on one source line", () => {
+    const tsv = "4\t1\t1\t1\t1\t0\t52\t43\t1092\t44\t-1\t\n" +
+      "5\t1\t1\t1\t1\t1\t52\t43\t173\t44\t96\tCustomer\n" +
+      "5\t1\t1\t1\t1\t2\t533\t48\t81\t26\t95\tDate\n" +
+      "5\t1\t1\t1\t1\t3\t1052\t47\t92\t27\t96\tSales";
+    expect(tsvToGrid(tsv)).toEqual([["Customer", "Date", "Sales"]]);
+  });
   it("normalizes Arabic decimal amounts", () => expect(toNumber("١٬٢٣٤٫٥٠")).toBe(1234.5));
   it("rejects impossible dates", () => expect(toDate("31/02/2026")).toBeNull());
   it("excludes Arabic total footers without double counting", () => {
