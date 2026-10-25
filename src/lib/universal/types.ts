@@ -7,6 +7,7 @@ export interface RawTable {
   /** 1-based row number in the source file for each data row (row provenance). */
   sourceRows: number[];
   headerRow: number;
+  extraction?: import("./extraction").ExtractionEvidence;
 }
 
 export type ColumnKind = "numeric" | "date" | "categorical" | "identifier" | "text" | "empty";
@@ -109,6 +110,7 @@ export interface ArchetypeAcceleration {
 }
 
 export interface AnalysisResult {
+  extraction?: import("./extraction").ExtractionEvidence;
   engineVersion: string;
   fileName: string;
   sheet: string | null;

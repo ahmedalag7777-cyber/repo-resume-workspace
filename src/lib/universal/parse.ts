@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import type { Cell, RawTable } from "./types";
+import type { ParseOptions } from "./extraction";
 
 const AR_DIGITS = /[٠-٩]/g;
 
@@ -7,7 +8,7 @@ export function toNumber(v: Cell): number | null {
   if (v === null || v === undefined) return null;
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
   let s = String(v).trim();
-  if (!s) return null;
+  if (!s || /[\p{L}]/u.test(s.replace(/(?:SAR|USD|AED|YER|EUR|ر\.س|ر\.ي|ريال|دولار)/gi, ""))) return null;
   s = s.replace(AR_DIGITS, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/٫/g, ".").replace(/٬/g, ",");
   let neg = false;
   if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
@@ -28,21 +29,22 @@ export function toDate(v: Cell, allowSerial = false): Date | null {
   }
   const s = String(v).trim().replace(AR_DIGITS, (d) => String(d.charCodeAt(0) - 0x0660));
   let m = s.match(/^(\d{4})[-/.](\d{1,2})(?:[-/.](\d{1,2}))?/);
-  if (m) return safe(+m[1]!, +m[2]!, m[3] ? +m[3] : 1);
+  if (m?.[1] && m[2]) return safe(+m[1], +m[2], m[3] ? +m[3] : 1);
   m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
-  if (m) {
-    let y = +m[3]!; if (y < 100) y += 2000;
-    const a = +m[1]!, b = +m[2]!;
+  if (m?.[1] && m[2] && m[3]) {
+    let y = +m[3]; if (y < 100) y += 2000;
+    const a = +m[1], b = +m[2];
     return a > 12 ? safe(y, b, a) : b > 12 ? safe(y, a, b) : safe(y, b, a); // default day-first (Arabic locale)
   }
   m = s.match(/^(\d{1,2})[-/](\d{4})$/);
-  if (m) return safe(+m[2]!, +m[1]!, 1);
+  if (m?.[1] && m[2]) return safe(+m[2], +m[1], 1);
   return null;
 }
 
 function safe(y: number, mo: number, d: number): Date | null {
   if (y < 1900 || y > 2200 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
-  return new Date(Date.UTC(y, mo - 1, d));
+  const date = new Date(Date.UTC(y, mo - 1, d));
+  return date.getUTCMonth() === mo - 1 && date.getUTCDate() === d ? date : null;
 }
 
 /** Detect the header row: first row in the top 15 with the most non-empty text cells. */
@@ -73,7 +75,7 @@ export function gridToTable(grid: Cell[][], sheet: string | null): RawTable {
     if (!r.some((c) => c !== null && String(c).trim() !== "")) continue;
     const first = String(r.find((c) => c !== null && String(c).trim() !== "") ?? "");
     // drop subtotal/total footer rows — they double count
-    if (/^(الإجمالي|الاجمالي|المجموع|إجمالي عام|total|grand total|subtotal)\b/i.test(first.trim())) continue;
+    if (/^(?:(?:الإجمالي|الاجمالي|المجموع|إجمالي عام)(?:\s|$)|(?:total|grand total|subtotal)\b)/i.test(first.trim())) continue;
     rows.push(headers.map((_, j) => normalizeCell(r[j])));
     sourceRows.push(i + 1);
   }
@@ -88,8 +90,18 @@ function normalizeCell(c: unknown): Cell {
   return s === "" ? null : s;
 }
 
-export async function parseFile(file: File): Promise<RawTable[]> {
+export async function parseFile(file: File, options: ParseOptions = {}): Promise<RawTable[]> {
   const name = file.name.toLowerCase();
+  if (name.endsWith(".pdf")) return (await import("./pdf")).parsePdf(file, options);
+  if (name.endsWith(".docx")) return (await import("./docx")).parseDocx(file);
+  if (/\.(png|jpe?g|webp)$/.test(name)) {
+    const { grid, confidence } = await (await import("./ocr")).recognizeImage(file, options);
+    if (!grid.some((row) => row.length >= 2)) throw new Error("لم يُكتشف جدول واضح في الصورة؛ لا يمكن اعتماد النص كبيانات مالية.");
+    const table = gridToTable(grid, "الصورة");
+    if (!table.rows.length) throw new Error("الصورة لا تحتوي على صفوف بيانات قابلة للقراءة");
+    return [{ ...table, extraction: { method: "ocr", source: "الصورة", reviewRequired: true, confidence,
+      warnings: ["قد تخطئ قراءة الصور في الأرقام واتجاه العربية؛ قارن المعاينة بالصورة الأصلية.", "أرقام الصفوف تشير إلى السطور المستخرجة."] } }];
+  }
   if (name.endsWith(".csv") || name.endsWith(".txt") || name.endsWith(".tsv")) {
     const text = await file.text();
     return [parseCsvText(text)];

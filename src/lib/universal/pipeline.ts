@@ -3,6 +3,7 @@ import { buildInsights, buildTasks, businessQuestions } from "./advise";
 import { derivedCapabilities, groupBy, periodSeries, runCapabilities, type Ctx } from "./capabilities";
 import { detectDomains, normHeader, pickRoles, profileColumns } from "./profile";
 import { analyzeMatrix } from "./matrix";
+import { selectFreeRuntime } from "./free-runtime";
 import type { AnalysisResult, ArchetypeAcceleration, PipelineStage, RawTable } from "./types";
 
 export const ENGINE_VERSION = "universal-1.0.0";
@@ -18,6 +19,8 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   st("upload", "رفع", "done", fileName);
   st("discover", "اكتشاف", "done", `${t.sheet ? `ورقة «${t.sheet}»، ` : ""}ترويسة في الصف ${t.headerRow}`);
   st("parse", "قراءة", "done", `${t.rows.length} صف × ${t.headers.length} عمود`);
+  if (t.extraction) st("extraction", "مصدر القراءة", "review", `${t.extraction.source} • ${t.extraction.warnings.join(" • ")}`);
+  st("runtime", "مسار التشغيل", "done", selectFreeRuntime().reason);
   const cols = profileColumns(t, opts.learned);
   st("normalize", "توحيد", "done", "أرقام عربية/فواصل/تواريخ/صفوف إجمالي مستبعدة");
   const mapped = cols.filter((c) => c.field).length;
@@ -38,8 +41,8 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
 
   const ctx: Ctx = { t, cols, roles, domains, priorSameSignature: opts.priorSameSignature ?? 0 };
   const caps = runCapabilities(ctx);
-  const q = caps.find((c) => c.id === "quality")!;
-  const qualityScore = (q.output as { score: number }).score;
+  const q = caps.find((c) => c.id === "quality");
+  const qualityScore = (q?.output as { score: number } | undefined)?.score ?? 0;
   st("quality", "جودة البيانات", qualityScore >= 70 ? "done" : "review", `${qualityScore}/100`);
   st("truth", "الحقيقة", "done", "كل رقم مشتق من صفوف الملف مع رقم الصف");
   st("detect", "رصد القدرات", "done", `${caps.length} قدرة مفحوصة`);
@@ -70,6 +73,7 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   const segments = mx ? mx.segments : segDim ? groupBy(ctx, segDim, roles.measure).slice(0, 12).map((g) => ({ name: g.name, value: g.value, count: g.count })) : [];
 
   return {
+    ...(t.extraction ? { extraction: t.extraction } : {}),
     engineVersion: ENGINE_VERSION, fileName, sheet: t.sheet, analyzedAt: new Date().toISOString(),
     rowCount: t.rows.length, columnCount: t.headers.length, columns: cols, roles, domains, qualityScore, archetype,
     capabilities, insights, tasks, stages,

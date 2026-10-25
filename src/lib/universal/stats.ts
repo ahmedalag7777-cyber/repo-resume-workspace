@@ -1,4 +1,7 @@
-export const sum = (a: number[]) => a.reduce((s, x) => s + x, 0);
+import Decimal from "decimal.js";
+
+const PreciseDecimal = Decimal.clone({ precision: 40 });
+export const sum = (a: number[]) => a.reduce((s, x) => s.plus(x), new PreciseDecimal(0)).toNumber();
 export const mean = (a: number[]) => (a.length ? sum(a) / a.length : 0);
 export function std(a: number[]) {
   if (a.length < 2) return 0;
