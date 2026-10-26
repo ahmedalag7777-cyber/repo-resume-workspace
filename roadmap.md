@@ -11,8 +11,9 @@
 ## Executive order (P0, 2026-10-24): Tooling-first before features
 Per أمر تنفيذي عاجل + Supplement V6: freeze feature work; INSPECT → RECONCILE → foundation tools → integrate+test → acceptance gate → then resume features. Budget $0, no paid paths, no silent paid fallback.
 
-## New delivery request (2026-10-26)
-- [ ] Send all application work to GitHub — requires the owner to connect Git sync in Lovable; direct pushes and sync-status inspection are unavailable to the agent.
+## Delivery order (2026-10-26)
+- [x] User priority: finish the application according to the attached executive message first; defer GitHub delivery.
+- [ ] Send all application work to GitHub after application work — deferred by user; requires owner-controlled Git sync.
 
 - [ ] P0-A: Inventory current tooling vs required capabilities; reconciliation matrix (KEEP/EXTEND/INTEGRATE/REJECT/DEFER per capability)
 - [ ] Resume 2026-10-25: finish browser PDF/DOCX/OCR adapters, extraction review and table selection, precise arithmetic, free runtime guard, operational tests and acceptance evidence
