@@ -8,13 +8,31 @@ export function htmlToGrids(html: string, doc: Document): Cell[][][] {
   const root = doc.createElement("div");
   root.innerHTML = html;
   const grids: Cell[][][] = [];
-  for (const table of Array.from(root.querySelectorAll("table"))) {
+  for (const table of Array.from(root.querySelectorAll("table")).filter((t) => !t.parentElement?.closest("table"))) {
     const grid: Cell[][] = [];
-    for (const tr of Array.from(table.querySelectorAll("tr"))) {
-      const row = Array.from(tr.querySelectorAll("th,td")).map((cell) => {
+    const spanning = new Map<number, { value: Cell; remaining: number }>();
+    for (const tr of Array.from(table.querySelectorAll("tr")).filter((r) => r.closest("table") === table)) {
+      const row: Cell[] = [];
+      for (const [column, span] of spanning) {
+        row[column] = span.value;
+        span.remaining--;
+        if (span.remaining <= 0) spanning.delete(column);
+      }
+      let column = 0;
+      for (const cell of Array.from(tr.children).filter((c) => /^(TH|TD)$/.test(c.tagName))) {
+        while (row[column] !== undefined) column++;
         const t = (cell.textContent ?? "").trim();
-        return t === "" ? null : t;
-      });
+        const value = t === "" ? null : t;
+        const width = Math.max(1, Math.min(100, Number(cell.getAttribute("colspan")) || 1));
+        const height = Math.max(1, Math.min(100, Number(cell.getAttribute("rowspan")) || 1));
+        for (let offset = 0; offset < width; offset++) {
+          // Do not duplicate a merged monetary value into adjacent columns.
+          const v = offset === 0 ? value : null;
+          row[column + offset] = v;
+          if (height > 1) spanning.set(column + offset, { value: v, remaining: height - 1 });
+        }
+        column += width;
+      }
       if (row.some((c) => c !== null)) grid.push(row);
     }
     if (grid.length) grids.push(grid);
