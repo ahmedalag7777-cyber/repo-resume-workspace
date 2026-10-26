@@ -22,6 +22,7 @@ export function ExtractionReview({ fileName, tables, selected, onSelect, onConfi
       {table.extraction.warnings.map((w, i) => <p key={i} className="mt-2">{w}</p>)}
     </div>}
     <p className="text-sm text-muted-foreground">{table.rows.length} صف • بداية الترويسة: {table.headerRow}</p>
+    {table.audit && <p className="text-sm text-muted-foreground">{table.audit.excluded.filter((r) => r.reason === "total").length} صف إجمالي مستبعد • {table.audit.shapeIssues.length} صف مختلف العرض</p>}
     <div className="max-h-80 overflow-auto rounded-md border border-border">
       <table className="w-full text-sm"><thead className="bg-muted text-foreground"><tr>
         <th className="px-3 py-2 text-start">السطر</th>

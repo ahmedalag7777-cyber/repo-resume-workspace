@@ -8,6 +8,15 @@ export interface RawTable {
   sourceRows: number[];
   headerRow: number;
   extraction?: import("./extraction").ExtractionEvidence;
+  audit?: TableAudit;
+}
+
+export interface TableAudit {
+  inputRows: number;
+  headerRow: number;
+  excluded: { row: number; reason: "preamble" | "blank" | "total"; label: string }[];
+  shapeIssues: { row: number; expected: number; actual: number }[];
+  formulas?: { address: string; expression: string; cached: boolean }[];
 }
 
 export type ColumnKind = "numeric" | "date" | "categorical" | "identifier" | "text" | "empty";
@@ -110,6 +119,8 @@ export interface ArchetypeAcceleration {
 }
 
 export interface AnalysisResult {
+  audit?: TableAudit;
+  verification?: import("./verification").NumericVerification[];
   extraction?: import("./extraction").ExtractionEvidence;
   engineVersion: string;
   fileName: string;

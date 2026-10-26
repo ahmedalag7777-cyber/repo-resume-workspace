@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import type { Cell, RawTable } from "./types";
+import type { Cell, RawTable, TableAudit } from "./types";
 import type { ParseOptions } from "./extraction";
 
 const AR_DIGITS = /[٠-٩]/g;
@@ -62,6 +62,8 @@ function detectHeader(grid: Cell[][]): number {
 
 export function gridToTable(grid: Cell[][], sheet: string | null): RawTable {
   const h = detectHeader(grid);
+  const audit: TableAudit = { inputRows: grid.length, headerRow: h + 1, excluded: [], shapeIssues: [] };
+  for (let i = 0; i < h; i++) audit.excluded.push({ row: i + 1, reason: "preamble", label: (grid[i] ?? []).map((c) => String(c ?? "")).join(" • ") });
   const rawHeaders = (grid[h] ?? []).map((c, i) => (c === null || String(c).trim() === "" ? `عمود ${i + 1}` : String(c).trim()));
   const seen = new Map<string, number>();
   const headers = rawHeaders.map((x) => {
@@ -72,14 +74,17 @@ export function gridToTable(grid: Cell[][], sheet: string | null): RawTable {
   const sourceRows: number[] = [];
   for (let i = h + 1; i < grid.length; i++) {
     const r = grid[i] ?? [];
-    if (!r.some((c) => c !== null && String(c).trim() !== "")) continue;
+    if (!r.some((c) => c !== null && String(c).trim() !== "")) { audit.excluded.push({ row: i + 1, reason: "blank", label: "" }); continue; }
     const first = String(r.find((c) => c !== null && String(c).trim() !== "") ?? "");
     // drop subtotal/total footer rows — they double count
-    if (/^(?:(?:الإجمالي|الاجمالي|المجموع|إجمالي عام)(?:\s|$)|(?:total|grand total|subtotal)\b)/i.test(first.trim())) continue;
+    if (/^(?:الإجمالي|الاجمالي|المجموع|إجمالي عام|الإجمالي الكلي|الاجمالي الكلي|المجموع الكلي|total|grand total|subtotal)\s*[:：]?$/i.test(first.trim())) {
+      audit.excluded.push({ row: i + 1, reason: "total", label: first }); continue;
+    }
+    if (r.length !== headers.length) audit.shapeIssues.push({ row: i + 1, expected: headers.length, actual: r.length });
     rows.push(headers.map((_, j) => normalizeCell(r[j])));
     sourceRows.push(i + 1);
   }
-  return { sheet, headers, rows, sourceRows, headerRow: h + 1 };
+  return { sheet, headers, rows, sourceRows, headerRow: h + 1, audit };
 }
 
 function normalizeCell(c: unknown): Cell {
@@ -115,6 +120,16 @@ export async function parseFile(file: File, options: ParseOptions = {}): Promise
       if (!ws) continue;
       const grid = XLSX.utils.sheet_to_json<Cell[]>(ws, { header: 1, raw: true, defval: null }) as Cell[][];
       const t = gridToTable(grid, sn);
+      const formulas = Object.entries(ws).flatMap(([address, cell]) => {
+        if (address.startsWith("!") || typeof cell !== "object" || !cell || !("f" in cell) || typeof cell.f !== "string") return [];
+        return [{ address, expression: cell.f, cached: "v" in cell && cell.v !== undefined && cell.v !== null }];
+      });
+      if (formulas.length && t.audit) {
+        t.audit.formulas = formulas;
+        t.extraction = { method: "spreadsheet", source: sn, reviewRequired: true,
+          warnings: [`${formulas.length} خلية بصيغة؛ التحليل يقرأ القيم المخزنة ولا يعيد حساب الصيغ.`,
+            `${formulas.filter((f) => !f.cached).length} صيغة دون قيمة مخزنة؛ حدّث الحسابات في الملف الأصلي قبل اعتماد النتائج.`] };
+      }
       if (t.rows.length) out.push(t);
     }
     return out;

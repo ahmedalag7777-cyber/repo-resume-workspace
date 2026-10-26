@@ -4,9 +4,10 @@ import { derivedCapabilities, groupBy, periodSeries, runCapabilities, type Ctx }
 import { detectDomains, normHeader, pickRoles, profileColumns } from "./profile";
 import { analyzeMatrix } from "./matrix";
 import { selectFreeRuntime } from "./free-runtime";
+import { verifyNumericTotals } from "./verification";
 import type { AnalysisResult, ArchetypeAcceleration, PipelineStage, RawTable } from "./types";
 
-export const ENGINE_VERSION = "universal-1.0.0";
+export const ENGINE_VERSION = "universal-1.1.0";
 
 /** Structural signature: same headers ⇒ same report family (enables decision replay). */
 export function reportSignature(t: RawTable) {
@@ -22,7 +23,11 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   if (t.extraction) st("extraction", "مصدر القراءة", "review", `${t.extraction.source} • ${t.extraction.warnings.join(" • ")}`);
   st("runtime", "مسار التشغيل", "done", selectFreeRuntime().reason);
   const cols = profileColumns(t, opts.learned);
-  st("normalize", "توحيد", "done", "أرقام عربية/فواصل/تواريخ/صفوف إجمالي مستبعدة");
+  st("normalize", "توحيد", "done", `تطبيع الأرقام والتواريخ • ${t.audit?.excluded.filter((r) => r.reason === "total").length ?? 0} صف إجمالي مستبعد`);
+  if (t.audit) st("lineage", "سجل القراءة", t.audit.shapeIssues.length ? "review" : "done", `${t.audit.inputRows} سطر أصلي • ${t.audit.excluded.length} مستبعد • ${t.audit.shapeIssues.length} اختلاف في عرض الصفوف`);
+  const verification = verifyNumericTotals(t, cols);
+  st("verify", "تحقق مستقل", verification.every((v) => v.matches && !v.invalidRows.length) ? "done" : "review", `${verification.filter((v) => v.matches).length} مجموع مطابق من ${verification.length} • تحقق من الخلايا الأصلية`);
+  if (t.audit?.formulas?.length) st("formulas", "صيغ الملف", "review", `${t.audit.formulas.length} صيغة مقروءة بقيمها المخزنة فقط؛ دون إعادة حساب`);
   const mapped = cols.filter((c) => c.field).length;
   st("semantic", "ربط دلالي", mapped ? "done" : "review", `${mapped} من ${cols.length} عمود مربوط بحقل معياري`);
   const roles = pickRoles(cols, t.rows.length);
@@ -44,7 +49,7 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   const q = caps.find((c) => c.id === "quality");
   const qualityScore = (q?.output as { score: number } | undefined)?.score ?? 0;
   st("quality", "جودة البيانات", qualityScore >= 70 ? "done" : "review", `${qualityScore}/100`);
-  st("truth", "الحقيقة", "done", "كل رقم مشتق من صفوف الملف مع رقم الصف");
+  st("truth", "الدليل", t.extraction?.reviewRequired ? "review" : "done", "النتائج مشتقة من الصفوف المقروءة؛ صحة المصدر وتفسيره تحتاجان مراجعة");
   st("detect", "رصد القدرات", "done", `${caps.length} قدرة مفحوصة`);
   const mx = analyzeMatrix(t, fileName);
   let insights = buildInsights(ctx, caps);
@@ -73,6 +78,7 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   const segments = mx ? mx.segments : segDim ? groupBy(ctx, segDim, roles.measure).slice(0, 12).map((g) => ({ name: g.name, value: g.value, count: g.count })) : [];
 
   return {
+    ...(t.audit ? { audit: t.audit } : {}), verification,
     ...(t.extraction ? { extraction: t.extraction } : {}),
     engineVersion: ENGINE_VERSION, fileName, sheet: t.sheet, analyzedAt: new Date().toISOString(),
     rowCount: t.rows.length, columnCount: t.headers.length, columns: cols, roles, domains, qualityScore, archetype,
