@@ -29,7 +29,7 @@ export async function parsePdf(file: File, options: ParseOptions = {}): Promise<
         canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
         const context = canvas.getContext("2d");
         if (!context) throw new Error("تعذر تجهيز صفحة PDF للقراءة");
-        await page.render({ canvasContext: context, canvas, viewport }).promise;
+        await page.render({ canvasContext: context, viewport }).promise;
         const ocr = await recognizeImage(canvas, options);
         grid = ocr.grid; confidence = ocr.confidence;
         canvas.width = 0; canvas.height = 0;

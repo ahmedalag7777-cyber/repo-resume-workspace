@@ -20,6 +20,10 @@ describe("document foundation", () => {
     expect(table.sourceRows).toEqual([2]);
     expect(analyzeTable(table, "sales.pdf").rowCount).toBe(1);
   });
+  it("retains merged Word column positions without repeating monetary values", () => {
+    expect(htmlToGrids('<table><tr><td colspan="2">المبيعات</td><td>القيمة</td></tr><tr><td rowspan="2">أحمد</td><td>يناير</td><td>10</td></tr><tr><td>فبراير</td><td>20</td></tr></table>', document))
+      .toEqual([[["المبيعات", null, "القيمة"], ["أحمد", "يناير", "10"], ["أحمد", "فبراير", "20"]]]);
+  });
   it("uses OCR word positions rather than single text-space splitting", () => {
     const tsv = "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext\n" +
       "5\t1\t1\t1\t1\t1\t10\t10\t40\t10\t95\tCustomer\n" +
