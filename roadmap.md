@@ -12,6 +12,7 @@
 Per أمر تنفيذي عاجل + Supplement V6: freeze feature work; INSPECT → RECONCILE → foundation tools → integrate+test → acceptance gate → then resume features. Budget $0, no paid paths, no silent paid fallback.
 
 ## Delivery order (2026-10-26)
+- [ ] Continue the newly reattached executive message: source transformation audit, independent numeric verification, then reconcile remaining V6 work without repeating completed tools.
 - [x] User priority: finish the application according to the attached executive message first; defer GitHub delivery.
 - [ ] Send all application work to GitHub after application work — deferred by user; requires owner-controlled Git sync.
 
