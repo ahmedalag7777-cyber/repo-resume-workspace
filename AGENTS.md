@@ -16,3 +16,4 @@
 - Extracted document tables require an explicit preview confirmation and source selection before saving; inferred spatial structure is not authoritative financial evidence.
 - Inference selection defaults to deterministic local analysis and blocks all unconfigured external providers; never introduce a paid fallback.
 - Universal numeric sums use decimal arithmetic before returning numbers; this reduces aggregation error without claiming arbitrary-precision end-to-end finance.
+- Universal parsing records excluded rows, shape differences and spreadsheet formulas in a serializable audit; saved results keep this audit and independently recomputed numeric totals so source transformations remain inspectable.

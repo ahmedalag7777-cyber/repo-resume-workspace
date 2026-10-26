@@ -1,6 +1,7 @@
 import { getCanonicalFieldDefinitions, matchCanonicalField } from "@/lib/report-intelligence/canonical-schema";
 import { mapHeader } from "@/lib/report-intelligence/semantic-field-mapper";
 import { toDate, toNumber } from "./parse";
+import { sum } from "./stats";
 import type { ColumnProfile, RawTable } from "./types";
 
 export const normHeader = (h: string) =>
@@ -28,7 +29,7 @@ export function profileColumns(t: RawTable, learned: Record<string, string> = {}
     let field: string | null = null;
     let method: ColumnProfile["mappingMethod"] = "unmapped";
     let conf = 0;
-    if (learned[key]) { field = learned[key]!; method = "learned"; conf = 1; }
+    if (learned[key]) { field = learned[key] ?? null; method = "learned"; conf = 1; }
     else if (FIELDS.has(name.trim().toLowerCase())) { field = (FIELDS.get(name.trim().toLowerCase()) as { field: string }).field; method = "exact"; conf = 1; }
     else {
       const m = matchCanonicalField(name);
@@ -57,7 +58,7 @@ export function profileColumns(t: RawTable, learned: Record<string, string> = {}
     };
     if (kind === "numeric") {
       p.min = Math.min(...numOk); p.max = Math.max(...numOk);
-      p.sum = numOk.reduce((s, x) => s + x, 0); p.mean = p.sum / (numOk.length || 1);
+      p.sum = sum(numOk); p.mean = p.sum / (numOk.length || 1);
       p.negatives = numOk.filter((x) => x < 0).length;
       p.isMonetary = def?.type === "currency" || MONETARY.test(name);
     }
