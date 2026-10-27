@@ -2,7 +2,7 @@ import { detectReportArchetype } from "@/lib/report-intelligence/archetype-regis
 import { buildInsights, buildTasks, businessQuestions } from "./advise";
 import { derivedCapabilities, groupBy, periodSeries, runCapabilities, type Ctx } from "./capabilities";
 import { detectDomains, normHeader, pickRoles, profileColumns } from "./profile";
-import { analyzeMatrix } from "./matrix";
+import { analyzeMatrix, detectMatrix } from "./matrix";
 import { selectFreeRuntime } from "./free-runtime";
 import { verifyNumericTotals } from "./verification";
 import type { AnalysisResult, ArchetypeAcceleration, PipelineStage, RawTable } from "./types";
@@ -26,7 +26,7 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   st("normalize", "توحيد", "done", `تطبيع الأرقام والتواريخ • ${t.audit?.excluded.filter((r) => r.reason === "total").length ?? 0} صف إجمالي مستبعد`);
   if (t.audit) st("lineage", "سجل القراءة", t.audit.shapeIssues.length ? "review" : "done", `${t.audit.inputRows} سطر أصلي • ${t.audit.excluded.length} مستبعد • ${t.audit.shapeIssues.length} اختلاف في عرض الصفوف`);
   const verification = verifyNumericTotals(t, cols);
-  st("verify", "تحقق مستقل", verification.every((v) => v.matches && !v.invalidRows.length) ? "done" : "review", `${verification.filter((v) => v.matches).length} مجموع مطابق من ${verification.length} • تحقق من الخلايا الأصلية`);
+  st("verify", "تحقق مستقل", !verification.length ? "skipped" : verification.every((v) => v.matches && !v.invalidRows.length) ? "done" : "review", verification.length ? `${verification.filter((v) => v.matches).length} مجموع مطابق من ${verification.length} • تحقق من الخلايا الأصلية` : "لا أعمدة رقمية للتحقق الحسابي");
   if (t.audit?.formulas?.length) st("formulas", "صيغ الملف", "review", `${t.audit.formulas.length} صيغة مقروءة بقيمها المخزنة فقط؛ دون إعادة حساب`);
   const mapped = cols.filter((c) => c.field).length;
   st("semantic", "ربط دلالي", mapped ? "done" : "review", `${mapped} من ${cols.length} عمود مربوط بحقل معياري`);
@@ -52,6 +52,7 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   st("truth", "الدليل", t.extraction?.reviewRequired ? "review" : "done", "النتائج مشتقة من الصفوف المقروءة؛ صحة المصدر وتفسيره تحتاجان مراجعة");
   st("detect", "رصد القدرات", "done", `${caps.length} قدرة مفحوصة`);
   const mx = analyzeMatrix(t, fileName);
+  if (!mx && detectMatrix(t)) st("matrix-review", "مراجعة الفترات", "review", "لم تُنتج قوائم توقف أو نمو: بيانات شهرية مفقودة أو سالبة أو عينة غير كافية؛ بقي التحليل العام بالقيم المقروءة.");
   let insights = buildInsights(ctx, caps);
   if (mx) {
     // Matrix reports: monthly columns are periods, not unknown fields; totals rows are not outliers.

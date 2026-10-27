@@ -24,6 +24,17 @@ describe("source evidence and arithmetic verification", () => {
     expect(r.columns.find((c) => c.name === "sales")?.sum).toBe(0.3);
     expect(r.verification?.[0]).toMatchObject({ sourceTotal: 0.3, profileTotal: 0.3, matches: true, numericRows: 2 });
   });
+  it("retains the transformation audit in the saved-result contract", () => {
+    const t = gridToTable([["customer", "sales"], ["Ahmed", 10], ["grand total", 10]], "Sheet1");
+    const r = analyzeTable(t, "sales.csv");
+    expect(JSON.parse(JSON.stringify(r)).audit.excluded).toEqual([{ row: 3, reason: "total", label: "grand total" }]);
+  });
+  it("keeps sum invariant when source rows are reordered", () => {
+    const values = [0.1, 0.2, 125.5, -10.25, 74.45];
+    const totals = [values, [...values].reverse(), [...values.slice(2), ...values.slice(0, 2)]].map((v) =>
+      analyzeTable(gridToTable([["sales", "customer"], ...v.map((n, i) => [n, `Customer ${i}`])], null), "sales.csv").columns[0]?.sum);
+    expect(totals).toEqual([190, 190, 190]);
+  });
   it("detects an incorrectly reported total independently", () => {
     const t = gridToTable([["customer", "sales"], ["Ahmed", 10]], null);
     const cols = profileColumns(t).map((c) => c.name === "sales" ? { ...c, sum: 999 } : c);
