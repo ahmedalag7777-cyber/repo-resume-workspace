@@ -3,6 +3,7 @@ import { gridToTable } from "@/lib/universal/parse";
 import { profileColumns } from "@/lib/universal/profile";
 import { verifyNumericTotals } from "@/lib/universal/verification";
 import { analyzeTable } from "@/lib/universal/pipeline";
+import { analyzeMatrix, detectMatrix } from "@/lib/universal/matrix";
 
 describe("source evidence and arithmetic verification", () => {
   it("records total removal with original row identity", () => {
@@ -27,5 +28,23 @@ describe("source evidence and arithmetic verification", () => {
     const t = gridToTable([["customer", "sales"], ["Ahmed", 10]], null);
     const cols = profileColumns(t).map((c) => c.name === "sales" ? { ...c, sum: 999 } : c);
     expect(verifyNumericTotals(t, cols)[0]).toMatchObject({ sourceTotal: 10, profileTotal: 999, matches: false });
+  });
+  it("does not remove a dominant legitimate customer as an assumed total", () => {
+    const t = gridToTable([["customer", "يناير", "فبراير", "مارس"], ["Large customer", 1000, 1000, 1000],
+      ...Array.from({ length: 11 }, (_, i) => [`Customer ${i}`, 1, 1, 1])], null);
+    expect(analyzeMatrix(t, "customers.csv")?.excludedTotalRows).toEqual([]);
+    expect(analyzeMatrix(t, "customers.csv")?.series[0]?.value).toBe(1011);
+  });
+  it("does not manufacture lost-customer evidence from missing monthly values", () => {
+    const t = gridToTable([["customer", "يناير", "فبراير", "مارس"], ["Ahmed", 100, null, null], ["Nora", 10, 10, 10], ["Salem", 20, 20, 20]], null);
+    expect(analyzeMatrix(t, "customers.csv")).toBeNull();
+  });
+  it("does not clamp returns to zero activity", () => {
+    const t = gridToTable([["customer", "يناير", "فبراير", "مارس"], ["Ahmed", 100, -10, 20], ["Nora", 10, 10, 10], ["Salem", 20, 20, 20]], null);
+    expect(analyzeMatrix(t, "customers.csv")).toBeNull();
+  });
+  it("rejects repeated ambiguous month columns", () => {
+    const t = { headers: ["customer", "يناير", "فبراير", "يناير"], rows: [["Ahmed", 1, 2, 3]], sheet: null, headerRow: 1, sourceRows: [2] };
+    expect(detectMatrix(t)).toBeNull();
   });
 });

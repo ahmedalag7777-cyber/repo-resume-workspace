@@ -5,7 +5,7 @@
  * row-level proof. Grand-total rows are excluded before any calculation.
  */
 import { toNumber } from "./parse";
-import { fmt } from "./stats";
+import { fmt, sum } from "./stats";
 import type { Insight, RawTable, Role } from "./types";
 
 const MONTHS: [number, RegExp][] = [
@@ -22,7 +22,7 @@ const MONTHS: [number, RegExp][] = [
   [11, /^(نوفمبر|تشرين الثاني|nov(ember)?)$/i],
   [12, /^(ديسمبر|كانون الأول|dec(ember)?)$/i],
 ];
-const TOTAL_RE = /(إجمالي|اجمالي|المجموع|مجموع|total|grand)/i;
+const TOTAL_RE = /^(?:إجمالي|اجمالي|الإجمالي|الاجمالي|المجموع|مجموع|الإجمالي الكلي|الاجمالي الكلي|المجموع الكلي|total|grand total)\s*[:：]?$/i;
 
 export interface MerchantView {
   kind: string;
@@ -48,6 +48,8 @@ function monthOf(h: string) {
 export function detectMatrix(t: RawTable) {
   const months = t.headers.map((h, i) => ({ i, h, m: monthOf(h) })).filter((x) => x.m !== null) as { i: number; h: string; m: number }[];
   if (months.length < 3) return null;
+  // Ambiguous repeated periods must not be silently merged or reordered.
+  if (new Set(months.map((m) => m.m)).size !== months.length) return null;
   months.sort((a, b) => a.m - b.m);
   const monthIdx = new Set(months.map((m) => m.i));
   // Entity = first mostly-text column with many distinct values.
@@ -67,7 +69,13 @@ const pctS = (x: number) => `${fmt(x * 100, 1)}%`;
 export function analyzeMatrix(t: RawTable, fileName: string): MatrixResult | null {
   const d = detectMatrix(t);
   if (!d) return null;
-  const entityLabel = t.headers[d.entity]!;
+  const entityLabel = t.headers[d.entity];
+  if (!entityLabel) return null;
+  // Missing is not zero; returns are not absent purchases. Use the general
+  // signed-value pipeline until the report defines these business semantics.
+  if (t.rows.some((r) => !TOTAL_RE.test(String(r[d.entity] ?? "").trim()) && d.months.some((m) => {
+    const value = toNumber(r[m.i] ?? null); return value === null || value < 0;
+  }))) return null;
   const isCustomer = /(عميل|زبون|زبائن|عملاء|customer|client)/i.test(entityLabel + fileName);
   const isSupplier = /(مورد|supplier|vendor)/i.test(entityLabel + fileName);
   const isProduct = /(صنف|منتج|مادة|item|product|sku)/i.test(entityLabel + fileName);
@@ -77,16 +85,15 @@ export function analyzeMatrix(t: RawTable, fileName: string): MatrixResult | nul
 
   type Ent = { name: string; row: number; vals: number[]; total: number; active: number; avg: number };
   const all: Ent[] = t.rows.map((r, k) => {
-    const vals = d.months.map((m) => Math.max(0, toNumber(r[m.i] ?? null) ?? 0));
-    const total = vals.reduce((a, b) => a + b, 0);
+    const vals = d.months.map((m) => toNumber(r[m.i] ?? null) ?? 0);
+    const total = sum(vals);
     const active = vals.filter((v) => v > 0).length;
-    return { name: String(r[d.entity] ?? "").trim(), row: t.sourceRows[k] ?? k + 2, vals, total, active, avg: active ? total / active : 0 };
+    return { name: String(r[d.entity] ?? "").trim(), row: t.sourceRows[k] ?? k + t.headerRow + 1, vals, total, active, avg: active ? total / active : 0 };
   }).filter((e) => e.name);
 
-  const grand = all.reduce((a, e) => a + e.total, 0);
   const excluded: number[] = [];
   const ents = all.filter((e) => {
-    if (TOTAL_RE.test(e.name) || e.total >= 0.45 * (grand - e.total) && all.length > 10) { excluded.push(e.row); return false; }
+    if (TOTAL_RE.test(e.name)) { excluded.push(e.row); return false; }
     return e.total > 0;
   });
   if (ents.length < 3) return null;
@@ -94,8 +101,8 @@ export function analyzeMatrix(t: RawTable, fileName: string): MatrixResult | nul
   const n = d.months.length;
   const L = n - 1;
   const mNames = d.months.map((m) => m.h);
-  const total = ents.reduce((a, e) => a + e.total, 0);
-  const monthTotals = mNames.map((_, j) => ents.reduce((a, e) => a + e.vals[j]!, 0));
+  const total = sum(ents.map((e) => e.total));
+  const monthTotals = mNames.map((_, j) => sum(ents.map((e) => e.vals[j] ?? 0)));
   const activeBy = mNames.map((_, j) => ents.filter((e) => e.vals[j]! > 0).length);
   const last = monthTotals[L]!, prev = monthTotals[L - 1]!;
   const mom = prev ? (last - prev) / prev : 0;
