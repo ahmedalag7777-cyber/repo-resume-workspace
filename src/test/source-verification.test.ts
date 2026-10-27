@@ -62,7 +62,7 @@ describe("source evidence and arithmetic verification", () => {
     const XLSX = await import("xlsx");
     const workbook = XLSX.utils.book_new();
     const sheet = XLSX.utils.aoa_to_sheet([["customer", "sales"], ["Ahmed", 10]]);
-    sheet.B2 = { t: "n", v: 10, f: "5+5" };
+    sheet["B2"] = { t: "n", v: 10, f: "5+5" };
     XLSX.utils.book_append_sheet(workbook, sheet, "Sales");
     const bytes = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
     const file = { name: "sales.xlsx", arrayBuffer: async () => bytes } as File;
