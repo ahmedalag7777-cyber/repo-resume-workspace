@@ -15,7 +15,7 @@ describe("source evidence and arithmetic verification", () => {
   });
   it("records extra cells instead of silently hiding a shape mismatch", () => {
     const t = gridToTable([["customer", "sales"], ["Ahmed", 10, 20]], null);
-    expect(t.audit?.shapeIssues).toEqual([{ row: 2, expected: 2, actual: 3 }]);
+    expect(t.audit?.shapeIssues).toEqual([{ row: 2, expected: 2, actual: 3, extraCells: [20] }]);
   });
   it("uses decimal arithmetic for actual reported profile totals", () => {
     const t = gridToTable([["customer", "sales"], ["Ahmed", 0.1], ["Nora", 0.2]], null);

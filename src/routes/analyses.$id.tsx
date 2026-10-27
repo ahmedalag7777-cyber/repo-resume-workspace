@@ -1,4 +1,6 @@
 import { MerchantPanel } from "@/components/merchant-panel";
+import { SourceAuditPanel } from "@/components/source-audit-panel";
+import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
@@ -53,7 +55,7 @@ const statusLabel: Record<string, string> = {
   BLOCKED: "محجوبة",
 };
 
-type Tab = "overview" | "insights" | "capabilities" | "data";
+type Tab = "overview" | "insights" | "capabilities" | "data" | "source";
 
 function AnalysisPage() {
   const row = Route.useLoaderData();
@@ -90,6 +92,7 @@ function AnalysisPage() {
     { id: "insights", label: `الرؤى (${result.insights.length})` },
     { id: "capabilities", label: `القدرات (${result.capabilities.length})` },
     { id: "data", label: "البيانات" },
+    { id: "source", label: "المصدر والتحقق" },
   ];
 
   return (
@@ -97,15 +100,15 @@ function AnalysisPage() {
       <SiteHeader />
 
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground">{result.fileName}</h1>
+        <h1 className="break-words text-2xl font-bold text-foreground">{result.fileName}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {result.rowCount} صف × {result.columnCount} عمود • جودة البيانات {result.qualityScore}/100
           {result.archetype.title ? ` • النموذج: ${result.archetype.title}` : " • تقرير عام (بدون نموذج متخصص)"}
         </p>
 
-        <div className="mt-6 flex gap-2 border-b border-border">
+        <div className="mt-6 flex flex-wrap gap-2 border-b border-border">
           {tabs.map((t) => (
-            <button
+            <Button variant="ghost"
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`px-4 py-2 text-sm font-medium ${
@@ -115,9 +118,10 @@ function AnalysisPage() {
               }`}
             >
               {t.label}
-            </button>
+            </Button>
           ))}
         </div>
+        {tab === "source" && <SourceAuditPanel result={result} />}
 
         {tab === "overview" && (
           <div className="mt-6 space-y-6">

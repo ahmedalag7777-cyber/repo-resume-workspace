@@ -80,7 +80,8 @@ export function gridToTable(grid: Cell[][], sheet: string | null): RawTable {
     if (/^(?:الإجمالي|الاجمالي|المجموع|إجمالي عام|الإجمالي الكلي|الاجمالي الكلي|المجموع الكلي|total|grand total|subtotal)\s*[:：]?$/i.test(first.trim())) {
       audit.excluded.push({ row: i + 1, reason: "total", label: first }); continue;
     }
-    if (r.length !== headers.length) audit.shapeIssues.push({ row: i + 1, expected: headers.length, actual: r.length });
+    if (r.length !== headers.length) audit.shapeIssues.push({ row: i + 1, expected: headers.length, actual: r.length,
+      ...(r.length > headers.length ? { extraCells: r.slice(headers.length).map(normalizeCell) } : {}) });
     rows.push(headers.map((_, j) => normalizeCell(r[j])));
     sourceRows.push(i + 1);
   }
