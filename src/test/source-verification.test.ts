@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gridToTable } from "@/lib/universal/parse";
+import { gridToTable, parseFile } from "@/lib/universal/parse";
 import { profileColumns } from "@/lib/universal/profile";
 import { verifyNumericTotals } from "@/lib/universal/verification";
 import { analyzeTable } from "@/lib/universal/pipeline";
@@ -57,5 +57,18 @@ describe("source evidence and arithmetic verification", () => {
   it("rejects repeated ambiguous month columns", () => {
     const t = { headers: ["customer", "يناير", "فبراير", "يناير"], rows: [["Ahmed", 1, 2, 3]], sheet: null, headerRow: 1, sourceRows: [2] };
     expect(detectMatrix(t)).toBeNull();
+  });
+  it("retains actual Excel formulas and forces cached-value review", async () => {
+    const XLSX = await import("xlsx");
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.aoa_to_sheet([["customer", "sales"], ["Ahmed", 10]]);
+    sheet.B2 = { t: "n", v: 10, f: "5+5" };
+    XLSX.utils.book_append_sheet(workbook, sheet, "Sales");
+    const bytes = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    const file = { name: "sales.xlsx", arrayBuffer: async () => bytes } as File;
+    const tables = await parseFile(file);
+    expect(tables[0]?.audit?.formulas).toEqual([{ address: "B2", expression: "5+5", cached: true }]);
+    expect(tables[0]?.extraction?.reviewRequired).toBe(true);
+    expect(tables[0]?.rows).toEqual([["Ahmed", 10]]);
   });
 });
