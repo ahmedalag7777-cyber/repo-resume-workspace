@@ -74,6 +74,12 @@ async def main():
                 await page.wait_for_url("**/analyses/*", timeout=45000)
                 created.append(page.url.rsplit("/", 1)[-1])
                 await page.get_by_role("heading", name=name, exact=True).wait_for()
+                await page.get_by_role("button", name="المصدر والتحقق", exact=True).click()
+                source = page.get_by_role("region", name="سجل المصدر والتحقق")
+                assert "مطابق" in await source.inner_text()
+                assert await source.locator("tbody tr").count() == 1
+                assert "400" in await source.locator("tbody").inner_text()
+                await source.screenshot(path=str(ROOT / f"{name}.source.png"))
                 await page.get_by_role("button", name="البيانات", exact=True).click()
                 for amount in ["125.50", "200.25", "74.25"]:
                     assert amount in await page.locator("main").inner_text()

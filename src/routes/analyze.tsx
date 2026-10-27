@@ -48,7 +48,7 @@ function AnalyzePage() {
       if (!tables.length) throw new Error("لم يتم العثور على جدول بيانات في الملف");
       const table = tables[0];
       if (!table) throw new Error("لم يتم العثور على جدول بيانات في الملف");
-      if (tables.length > 1 || table.extraction?.reviewRequired) {
+      if (tables.length > 1 || table.extraction?.reviewRequired || table.audit?.shapeIssues.length) {
         setPending({ file, tables }); setSelected(0);
       } else await saveAnalysis(file, table);
     } catch (err) {

@@ -15,7 +15,7 @@ export interface TableAudit {
   inputRows: number;
   headerRow: number;
   excluded: { row: number; reason: "preamble" | "blank" | "total"; label: string }[];
-  shapeIssues: { row: number; expected: number; actual: number }[];
+  shapeIssues: { row: number; expected: number; actual: number; extraCells?: Cell[] }[];
   formulas?: { address: string; expression: string; cached: boolean }[];
 }
 
