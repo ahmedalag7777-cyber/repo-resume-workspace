@@ -26,7 +26,7 @@ export interface ColumnProfile {
   index: number;
   kind: ColumnKind;
   field: string | null;
-  mappingMethod: "exact" | "alias" | "fuzzy" | "learned" | "unmapped";
+  mappingMethod: "exact" | "alias" | "fuzzy" | "learned" | "manual" | "unmapped";
   mappingConfidence: number;
   mappingNeedsReview: boolean;
   nonNull: number;
@@ -119,6 +119,8 @@ export interface ArchetypeAcceleration {
 }
 
 export interface AnalysisResult {
+  semantics?: import("./semantic-inference").SemanticEvidence[];
+  relationships?: import("./relationship-inference").RelationshipInference;
   audit?: TableAudit;
   verification?: import("./verification").NumericVerification[];
   extraction?: import("./extraction").ExtractionEvidence;

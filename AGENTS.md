@@ -17,3 +17,5 @@
 - Inference selection defaults to deterministic local analysis and blocks all unconfigured external providers; never introduce a paid fallback.
 - Universal numeric sums use decimal arithmetic before returning numbers; this reduces aggregation error without claiming arbitrary-precision end-to-end finance.
 - Universal parsing records excluded rows, shape differences and spreadsheet formulas in a serializable audit; saved results keep this audit and independently recomputed numeric totals so source transformations remain inspectable.
+- Semantic inference wraps the existing canonical dictionary, identifies columns by index and applies only trusted or explicitly approved meanings; duplicate names/targets remain unresolved because capability consumers require unique identities.
+- Arithmetic relationship inference is bounded, deterministic and validated on disjoint source rows; save candidates and counterexamples without altering cells, inventing meanings or claiming workbook formula recalculation.

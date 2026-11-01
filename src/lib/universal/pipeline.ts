@@ -5,16 +5,18 @@ import { detectDomains, normHeader, pickRoles, profileColumns } from "./profile"
 import { analyzeMatrix, detectMatrix } from "./matrix";
 import { selectFreeRuntime } from "./free-runtime";
 import { verifyNumericTotals } from "./verification";
+import { resolveSemantics, type MappingDecisions } from "./semantic-inference";
+import { inferRelationships } from "./relationship-inference";
 import type { AnalysisResult, ArchetypeAcceleration, PipelineStage, RawTable } from "./types";
 
-export const ENGINE_VERSION = "universal-1.1.0";
+export const ENGINE_VERSION = "universal-1.2.0";
 
 /** Structural signature: same headers ⇒ same report family (enables decision replay). */
 export function reportSignature(t: RawTable) {
   return t.headers.map(normHeader).sort().join("|");
 }
 
-export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Record<string, string>; priorSameSignature?: number } = {}): AnalysisResult {
+export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Record<string, string>; mappingDecisions?: MappingDecisions; priorSameSignature?: number } = {}): AnalysisResult {
   const stages: PipelineStage[] = [];
   const st = (id: string, label: string, status: PipelineStage["status"], note: string) => stages.push({ id, label, status, note });
   st("upload", "رفع", "done", fileName);
@@ -22,14 +24,17 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   st("parse", "قراءة", "done", `${t.rows.length} صف × ${t.headers.length} عمود`);
   if (t.extraction) st("extraction", "مصدر القراءة", "review", `${t.extraction.source} • ${t.extraction.warnings.join(" • ")}`);
   st("runtime", "مسار التشغيل", "done", selectFreeRuntime().reason);
-  const cols = profileColumns(t, opts.learned);
+  const semantics = resolveSemantics(profileColumns(t, opts.learned), opts.mappingDecisions);
+  const cols = semantics.columns;
+  const relationships = inferRelationships(t, cols);
   st("normalize", "توحيد", "done", `تطبيع الأرقام والتواريخ • ${t.audit?.excluded.filter((r) => r.reason === "total").length ?? 0} صف إجمالي مستبعد`);
   if (t.audit) st("lineage", "سجل القراءة", t.audit.shapeIssues.length ? "review" : "done", `${t.audit.inputRows} سطر أصلي • ${t.audit.excluded.length} مستبعد • ${t.audit.shapeIssues.length} اختلاف في عرض الصفوف`);
   const verification = verifyNumericTotals(t, cols);
   st("verify", "تحقق مستقل", !verification.length ? "skipped" : verification.every((v) => v.matches && !v.invalidRows.length) ? "done" : "review", verification.length ? `${verification.filter((v) => v.matches).length} مجموع مطابق من ${verification.length} • تحقق من الخلايا الأصلية` : "لا أعمدة رقمية للتحقق الحسابي");
   if (t.audit?.formulas?.length) st("formulas", "صيغ الملف", "review", `${t.audit.formulas.length} صيغة مقروءة بقيمها المخزنة فقط؛ دون إعادة حساب`);
   const mapped = cols.filter((c) => c.field).length;
-  st("semantic", "ربط دلالي", mapped ? "done" : "review", `${mapped} من ${cols.length} عمود مربوط بحقل معياري`);
+  st("semantic", "ربط دلالي", cols.some((c) => c.mappingNeedsReview) ? "review" : "done", `${mapped} من ${cols.length} عمود مربوط • المقترحات غير المعتمدة لا تحدد معنى مالياً`);
+  st("relationships", "علاقات حسابية", relationships.status !== "evaluated" ? "skipped" : relationships.candidates.length ? "review" : "done", `${relationships.testedEquations} علاقة مفحوصة • ${relationships.candidates.length} مرشح • عينة تحقق منفصلة؛ لا إثبات معنى أو سببية${relationships.truncated ? " • فحص محدود" : ""}`);
   const roles = pickRoles(cols, t.rows.length);
   const domains = detectDomains(cols, fileName);
   st("profile", "توصيف", "done", `مقياس: ${roles.measure ?? "—"} • تاريخ: ${roles.date ?? "—"} • أبعاد: ${roles.dimensions.length}`);
@@ -79,6 +84,7 @@ export function analyzeTable(t: RawTable, fileName: string, opts: { learned?: Re
   const segments = mx ? mx.segments : segDim ? groupBy(ctx, segDim, roles.measure).slice(0, 12).map((g) => ({ name: g.name, value: g.value, count: g.count })) : [];
 
   return {
+    semantics: semantics.evidence, relationships,
     ...(t.audit ? { audit: t.audit } : {}), verification,
     ...(t.extraction ? { extraction: t.extraction } : {}),
     engineVersion: ENGINE_VERSION, fileName, sheet: t.sheet, analyzedAt: new Date().toISOString(),
