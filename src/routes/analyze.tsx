@@ -11,6 +11,9 @@ import type { AnalysisResult, RawTable } from "@/lib/universal/types";
 import { SUPPORTED_FILE_ACCEPT } from "@/lib/universal/extraction";
 import { ExtractionReview } from "@/components/extraction-review";
 import { Button } from "@/components/ui/button";
+import { SemanticReview } from "@/components/semantic-review";
+import { profileColumns } from "@/lib/universal/profile";
+import { resolveSemantics, type MappingDecisions } from "@/lib/universal/semantic-inference";
 
 export const Route = createFileRoute("/analyze")({
   head: () => ({
@@ -34,6 +37,9 @@ function AnalyzePage() {
   const [status, setStatus] = useState("");
   const [pending, setPending] = useState<{ file: File; tables: RawTable[] } | null>(null);
   const [selected, setSelected] = useState(0);
+  const [mappingDecisions, setMappingDecisions] = useState<MappingDecisions>({});
+  const selectedTable = pending?.tables[selected];
+  const semanticEvidence = selectedTable ? resolveSemantics(profileColumns(selectedTable), mappingDecisions).evidence : [];
 
   const handleFile = async (file: File) => {
     if (!user) {
@@ -48,15 +54,16 @@ function AnalyzePage() {
       if (!tables.length) throw new Error("لم يتم العثور على جدول بيانات في الملف");
       const table = tables[0];
       if (!table) throw new Error("لم يتم العثور على جدول بيانات في الملف");
-      if (tables.length > 1 || table.extraction?.reviewRequired || table.audit?.shapeIssues.length) {
-        setPending({ file, tables }); setSelected(0);
+      const needsSemanticReview = resolveSemantics(profileColumns(table)).evidence.some((e) => e.status === "review" || e.status === "unmapped");
+      if (tables.length > 1 || table.extraction?.reviewRequired || table.audit?.shapeIssues.length || needsSemanticReview) {
+        setPending({ file, tables }); setSelected(0); setMappingDecisions({});
       } else await saveAnalysis(file, table);
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setBusy(false); setStatus(""); }
   };
 
-  const saveAnalysis = async (file: File, table: RawTable) => {
+  const saveAnalysis = async (file: File, table: RawTable, decisions: MappingDecisions = {}) => {
     if (!user) throw new Error("سجّل دخولك أولاً لحفظ التحليل");
       setStatus("جارٍ التحليل الذكي…");
       const hash = await sha256(file);
@@ -70,6 +77,7 @@ function AnalyzePage() {
         .eq("file_hash", hash);
 
       const result: AnalysisResult = analyzeTable(table, file.name, {
+        mappingDecisions: decisions,
         priorSameSignature: prior?.length ?? 0,
       });
 
@@ -120,7 +128,7 @@ function AnalyzePage() {
     const table = pending?.tables[selected];
     if (!pending || !table) return;
     setBusy(true);
-    try { await saveAnalysis(pending.file, table); }
+    try { await saveAnalysis(pending.file, table, mappingDecisions); }
     catch (err) { toast.error((err as Error).message); }
     finally { setBusy(false); setStatus(""); }
   };
@@ -156,7 +164,9 @@ function AnalyzePage() {
           </span>
         </Button>}
         {pending && <ExtractionReview fileName={pending.file.name} tables={pending.tables} selected={selected}
-          onSelect={setSelected} onConfirm={confirmTable} onCancel={() => setPending(null)} busy={busy} />}
+          onSelect={(index) => { setSelected(index); setMappingDecisions({}); }} onConfirm={confirmTable} onCancel={() => setPending(null)} busy={busy}>
+          <SemanticReview evidence={semanticEvidence} decisions={mappingDecisions} onChange={setMappingDecisions} disabled={busy} />
+        </ExtractionReview>}
         {pending && busy && <p className="mt-3 text-sm text-primary" role="status">{status}</p>}
         <input
           ref={inputRef}

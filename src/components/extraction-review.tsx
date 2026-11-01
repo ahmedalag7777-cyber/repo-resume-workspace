@@ -1,10 +1,12 @@
 import { AlertTriangle, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { RawTable } from "@/lib/universal/types";
+import type { ReactNode } from "react";
 
-export function ExtractionReview({ fileName, tables, selected, onSelect, onConfirm, onCancel, busy }: {
+export function ExtractionReview({ fileName, tables, selected, onSelect, onConfirm, onCancel, busy, children }: {
   fileName: string; tables: RawTable[]; selected: number; onSelect: (index: number) => void;
   onConfirm: () => void; onCancel: () => void; busy: boolean;
+  children?: ReactNode;
 }) {
   const table = tables[selected];
   if (!table) return null;
@@ -32,6 +34,7 @@ export function ExtractionReview({ fileName, tables, selected, onSelect, onConfi
         {row.map((cell, j) => <td key={j} className="whitespace-nowrap px-3 py-2 text-foreground">{String(cell ?? "—")}</td>)}
       </tr>)}</tbody></table>
     </div>
+    {children}
     <div className="flex flex-wrap gap-3">
       <Button onClick={onConfirm} disabled={busy}><Check />اعتماد الجدول وتحليله</Button>
       <Button variant="outline" onClick={onCancel} disabled={busy}><X />إلغاء</Button>
