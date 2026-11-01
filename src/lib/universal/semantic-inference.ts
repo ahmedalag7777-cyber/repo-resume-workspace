@@ -48,6 +48,8 @@ export function resolveSemantics(profiles: ColumnProfile[], decisions: MappingDe
   // Existing capabilities address fields and columns by name: refuse ambiguous identities, even after approval.
   for (const e of evidence) {
     if (e.field && evidence.some((other) => other.index !== e.index && other.field === e.field)) e.conflicts.push("أكثر من عمود للمعنى نفسه");
+  }
+  for (const e of evidence) {
     if (e.conflicts.includes("ترويسة مكررة") || e.conflicts.includes("أكثر من عمود للمعنى نفسه")) {
       e.field = null; e.status = "review";
     }
