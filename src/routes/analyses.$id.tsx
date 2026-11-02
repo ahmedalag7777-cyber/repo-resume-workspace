@@ -21,6 +21,8 @@ export const Route = createFileRoute("/analyses/$id")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  // Saved analyses are protected by the browser session; server rendering has no session and would report 404.
+  ssr: false,
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("analyses")
