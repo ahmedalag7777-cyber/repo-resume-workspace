@@ -22,7 +22,7 @@ Per أمر تنفيذي عاجل + Supplement V6: freeze feature work; INSPECT �
 - [x] Scoped acceptance evidence: docs/TOOLING_ACCEPTANCE.md; not a full application/V6 PASS. Scanned PDF compatibility fixed and tested.
 - [ ] Full document acceptance: authentic user workbook/Arabic complex scans and OCR data-license review required; reattached executive message is available and understood.
 - [ ] Advanced document foundations: formula recalculation, layout-preserving conversion, local model runtime — no compatible configured free runtime; explicitly deferred, not claimed complete.
-- [ ] P1 current slice: review and approve semantic candidates; bounded arithmetic relationships with held-out source evidence; unit and signed-in save/readback tests.
+- [x] P1 current slice: review and approve semantic candidates; bounded arithmetic relationships with held-out source evidence; unit and signed-in save/readback tests.
 - [ ] P1 broader acceptance: calibrated meanings, persistent user-scoped dictionary, units and multi-report relationships remain unverified.
 - [ ] Then resume: port Report-Advisor screens, admin panel, inner-page redesign, outcome capture (deferred by the order)
-- [ ] User request 2026-11-02: continue strongly; each work cycle must deliver a substantial, verified improvement.
+- [x] User request 2026-11-02: substantial verified improvement delivered this cycle (meanings, relationships, refresh fix).
