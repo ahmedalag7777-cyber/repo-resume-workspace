@@ -25,3 +25,4 @@ Per أمر تنفيذي عاجل + Supplement V6: freeze feature work; INSPECT �
 - [ ] P1 current slice: review and approve semantic candidates; bounded arithmetic relationships with held-out source evidence; unit and signed-in save/readback tests.
 - [ ] P1 broader acceptance: calibrated meanings, persistent user-scoped dictionary, units and multi-report relationships remain unverified.
 - [ ] Then resume: port Report-Advisor screens, admin panel, inner-page redesign, outcome capture (deferred by the order)
+- [ ] User request 2026-11-02: continue strongly; each work cycle must deliver a substantial, verified improvement.
