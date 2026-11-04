@@ -15,15 +15,15 @@ describe("persistent meaning dictionary", () => {
   const profiles = profileColumns(t);
 
   it("remembers only approved meanings, never rejections", () => {
-    const fb = decisionsToFeedback(profiles, { 0: "customer_name", 1: null });
-    expect(fb).toEqual([{ header_norm: "zbonname", field: "customer_name" }]);
+    const fb = decisionsToFeedback(profiles, { 0: "customerName", 1: null });
+    expect(fb).toEqual([{ header_norm: "zbonname", field: "customerName" }]);
   });
 
   it("applies a remembered meaning automatically to the next report", () => {
-    const learned = feedbackToLearned([{ header_norm: "zbonname", field: "customer_name" }]);
+    const learned = feedbackToLearned([{ header_norm: "zbonname", field: "customerName" }]);
     const next = resolveSemantics(profileColumns(t, learned));
     expect(next.evidence[0]?.status).toBe("existing");
-    expect(next.evidence[0]?.field).toBe("customer_name");
+    expect(next.evidence[0]?.field).toBe("customerName");
   });
 
   it("ignores remembered meanings that are not in the dictionary", () => {
