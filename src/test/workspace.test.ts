@@ -45,7 +45,7 @@ describe("report comparison", () => {
 
   it("never compares a column whose total failed verification", () => {
     const broken = structuredClone(feb);
-    broken.verification = broken.verification?.map((v) => ({ ...v, matches: false }));
+    broken.verification = (broken.verification ?? []).map((v) => ({ ...v, matches: false }));
     expect(compareReports(jan, broken).comparable).toBe(false);
   });
 });

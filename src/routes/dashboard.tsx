@@ -27,7 +27,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-const fieldLabel = new Map(getCanonicalFieldDefinitions().map((d) => [d.field, d.aliases[0] ?? d.field]));
+const fieldLabel = new Map<string, string>(getCanonicalFieldDefinitions().map((d) => [d.field as string, d.aliases[0] ?? d.field]));
 const fmt = (n: number | null) => (n === null ? "—" : new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n));
 const dateFmt = (s: string) => new Date(s).toLocaleDateString("ar", { year: "numeric", month: "short", day: "numeric" });
 
