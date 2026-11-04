@@ -30,7 +30,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/analyze" });
+    if (!loading && user) navigate({ to: "/dashboard" });
   }, [loading, user, navigate]);
 
   const submit = async (e: React.FormEvent) => {
@@ -53,7 +53,7 @@ function AuthPage() {
         }
         toast.success("تم إنشاء حسابك ودخولك مباشرة");
       }
-      navigate({ to: "/analyze" });
+      navigate({ to: "/dashboard" });
     } catch (err) {
       const msg = (err as Error).message;
       toast.error(msg.includes("Invalid login") ? "البريد أو كلمة المرور غير صحيحة" : msg);
