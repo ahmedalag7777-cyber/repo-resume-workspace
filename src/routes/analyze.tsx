@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { SemanticReview } from "@/components/semantic-review";
 import { profileColumns } from "@/lib/universal/profile";
 import { resolveSemantics, type MappingDecisions } from "@/lib/universal/semantic-inference";
+import { decisionsToFeedback, feedbackToLearned } from "@/lib/universal/learned-dictionary";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/analyze")({
   head: () => ({
@@ -38,8 +40,15 @@ function AnalyzePage() {
   const [pending, setPending] = useState<{ file: File; tables: RawTable[] } | null>(null);
   const [selected, setSelected] = useState(0);
   const [mappingDecisions, setMappingDecisions] = useState<MappingDecisions>({});
+  const qc = useQueryClient();
+  const { data: learned = {} } = useQuery({
+    queryKey: ["mapping_feedback", user?.id, "learned"],
+    enabled: !!user,
+    queryFn: async () => feedbackToLearned((await supabase.from("mapping_feedback").select("header_norm, field")).data ?? []),
+  });
+  const learnedCount = Object.keys(learned).length;
   const selectedTable = pending?.tables[selected];
-  const semanticEvidence = selectedTable ? resolveSemantics(profileColumns(selectedTable), mappingDecisions).evidence : [];
+  const semanticEvidence = selectedTable ? resolveSemantics(profileColumns(selectedTable, learned), mappingDecisions).evidence : [];
 
   const handleFile = async (file: File) => {
     if (!user) {
@@ -54,7 +63,7 @@ function AnalyzePage() {
       if (!tables.length) throw new Error("لم يتم العثور على جدول بيانات في الملف");
       const table = tables[0];
       if (!table) throw new Error("لم يتم العثور على جدول بيانات في الملف");
-      const needsSemanticReview = resolveSemantics(profileColumns(table)).evidence.some((e) => e.status === "review" || e.status === "unmapped");
+      const needsSemanticReview = resolveSemantics(profileColumns(table, learned)).evidence.some((e) => e.status === "review" || e.status === "unmapped");
       if (tables.length > 1 || table.extraction?.reviewRequired || table.audit?.shapeIssues.length || needsSemanticReview) {
         setPending({ file, tables }); setSelected(0); setMappingDecisions({});
       } else await saveAnalysis(file, table);
@@ -77,6 +86,7 @@ function AnalyzePage() {
         .eq("file_hash", hash);
 
       const result: AnalysisResult = analyzeTable(table, file.name, {
+        learned,
         mappingDecisions: decisions,
         priorSameSignature: prior?.length ?? 0,
       });
@@ -119,7 +129,15 @@ function AnalyzePage() {
         if (tErr) throw tErr;
       }
 
-      toast.success("تم التحليل والحفظ بنجاح");
+      const remember = decisionsToFeedback(profileColumns(table, learned), decisions);
+      if (remember.length) {
+        const { error: mErr } = await supabase.from("mapping_feedback")
+          .upsert(remember.map((m) => ({ ...m, user_id: user.id })), { onConflict: "user_id,header_norm" });
+        if (mErr) toast.error("حُفظ التحليل، لكن تعذر تذكّر معاني الأعمدة");
+        else qc.invalidateQueries({ queryKey: ["mapping_feedback"] });
+      }
+
+      toast.success(remember.length ? `تم التحليل والحفظ، وسيتذكر النظام ${remember.length} من معاني الأعمدة` : "تم التحليل والحفظ بنجاح");
       setPending(null);
       navigate({ to: "/analyses/$id", params: { id: row.id } });
   };
@@ -183,6 +201,9 @@ function AnalyzePage() {
         <p className="mt-4 text-center text-xs text-muted-foreground">
           يُحلَّل الملف داخل متصفحك، ثم تُحفظ النتيجة في حسابك فقط.
         </p>
+        {learnedCount > 0 && (
+          <p className="mt-2 text-center text-xs text-primary">يطبّق النظام تلقائياً {learnedCount} من معاني الأعمدة التي اعتمدتها سابقاً.</p>
+        )}
       </main>
     </div>
   );
