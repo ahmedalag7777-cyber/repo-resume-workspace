@@ -140,8 +140,8 @@ function DashboardPage() {
           ))}
         </section>
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          <section className="space-y-4 lg:col-span-2" aria-label="تقاريري">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <section className="min-w-0 space-y-4 lg:col-span-2" aria-label="تقاريري">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-foreground">تقاريري</h2>
               <div className="relative w-full sm:w-64">
@@ -181,7 +181,7 @@ function DashboardPage() {
             </ul>
           </section>
 
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-6">
             <section className="rounded-2xl border border-border bg-card p-4" aria-label="مهام عاجلة">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-card-foreground">مهام عاجلة</h2>
