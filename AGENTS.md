@@ -19,3 +19,6 @@
 - Universal parsing records excluded rows, shape differences and spreadsheet formulas in a serializable audit; saved results keep this audit and independently recomputed numeric totals so source transformations remain inspectable.
 - Semantic inference wraps the existing canonical dictionary, identifies columns by index and applies only trusted or explicitly approved meanings; duplicate names/targets remain unresolved because capability consumers require unique identities.
 - Arithmetic relationship inference is bounded, deterministic and validated on disjoint source rows; save candidates and counterexamples without altering cells, inventing meanings or claiming workbook formula recalculation.
+
+- Admin actions run in createServerFn with requireSupabaseAuth and a has_role check before loading the admin client; UI admin checks are hints only.
+- Report comparison uses only independently verified totals; unverified columns are never compared.
