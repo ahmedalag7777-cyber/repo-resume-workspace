@@ -7,6 +7,7 @@ import { useIsAdmin } from "@/lib/use-is-admin";
 const nav = [
   { to: "/dashboard", label: "لوحتي" },
   { to: "/analyze", label: "تحليل جديد" },
+  { to: "/decisions", label: "القرارات" },
   { to: "/tasks", label: "المهام" },
 ] as const;
 

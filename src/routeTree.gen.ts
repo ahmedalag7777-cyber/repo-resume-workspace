@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AnalyzeRouteImport } from './routes/analyze'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DecisionsRouteImport } from './routes/decisions'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as AnalysesIdRouteImport } from './routes/analyses.$id'
 
@@ -42,6 +43,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DecisionsRoute = DecisionsRouteImport.update({
+  id: '/decisions',
+  path: '/decisions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/decisions': typeof DecisionsRoute
   '/tasks': typeof TasksRoute
   '/analyses/$id': typeof AnalysesIdRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/decisions': typeof DecisionsRoute
   '/tasks': typeof TasksRoute
   '/analyses/$id': typeof AnalysesIdRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/decisions': typeof DecisionsRoute
   '/tasks': typeof TasksRoute
   '/analyses/$id': typeof AnalysesIdRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/analyze'
     | '/auth'
     | '/dashboard'
+    | '/decisions'
     | '/tasks'
     | '/analyses/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/analyze'
     | '/auth'
     | '/dashboard'
+    | '/decisions'
     | '/tasks'
     | '/analyses/$id'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/analyze'
     | '/auth'
     | '/dashboard'
+    | '/decisions'
     | '/tasks'
     | '/analyses/$id'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   AnalyzeRoute: typeof AnalyzeRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
+  DecisionsRoute: typeof DecisionsRoute
   TasksRoute: typeof TasksRoute
   AnalysesIdRoute: typeof AnalysesIdRoute
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/decisions': {
+      id: '/decisions'
+      path: '/decisions'
+      fullPath: '/decisions'
+      preLoaderRoute: typeof DecisionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tasks': {
       id: '/tasks'
       path: '/tasks'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyzeRoute: AnalyzeRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
+  DecisionsRoute: DecisionsRoute,
   TasksRoute: TasksRoute,
   AnalysesIdRoute: AnalysesIdRoute,
 }
