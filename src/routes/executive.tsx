@@ -79,8 +79,8 @@ function ExecutivePage() {
                 </li>
               ))}
             </Section>
-            <Section icon={Clock} title="مهام متأخرة" empty="لا توجد مهام متأخرة.">
-              {s.overdue.map((t) => (
+            <Section icon={Clock} title={`مهام متأخرة (${s.overdue.length})`} empty="لا توجد مهام متأخرة.">
+              {s.overdue.slice(0, 10).map((t) => (
                 <li key={t.id} className="flex justify-between gap-2"><span className="text-foreground">{t.title}</span><span className="text-xs text-destructive">استحقت {t.due_date}</span></li>
               ))}
             </Section>
