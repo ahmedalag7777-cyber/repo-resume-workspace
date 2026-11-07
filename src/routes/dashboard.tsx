@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { findDuplicateUploads } from "@/lib/universal/duplicates";
 import { toast } from "sonner";
 import { FileSpreadsheet, ListChecks, Gauge, BookMarked, Search, Trash2, GitCompare, ArrowUpRight, ArrowDownRight, Plus } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
@@ -93,6 +94,21 @@ function DashboardPage() {
     qc.invalidateQueries({ queryKey: ["work_tasks"] });
   };
 
+  const dupIds = useMemo(() => {
+    const work: Record<string, number> = {};
+    for (const t of tasks ?? []) if (t.status === "done") work[t.analysis_id] = (work[t.analysis_id] ?? 0) + 1;
+    return findDuplicateUploads((analyses ?? []) as never, work);
+  }, [analyses, tasks]);
+
+  const removeDuplicates = async () => {
+    if (!window.confirm(`حذف ${dupIds.length} نسخة مكررة؟ تبقى من كل ملف النسخة التي فيها عملك أو الأحدث.`)) return;
+    const { error } = await supabase.from("analyses").delete().in("id", dupIds);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`حُذفت ${dupIds.length} نسخة مكررة`);
+    setPicked([]);
+    qc.invalidateQueries();
+  };
+
   const forget = async (id: string) => {
     const { error } = await supabase.from("mapping_feedback").delete().eq("id", id);
     if (error) toast.error(error.message);
@@ -154,6 +170,13 @@ function DashboardPage() {
               <span>اختر تقريرين لمقارنة إجمالياتهما الموثّقة ({picked.length}/2)</span>
               <Button size="sm" variant="secondary" disabled={picked.length !== 2} onClick={runCompare} className="mr-auto">قارن</Button>
             </div>
+
+            {dupIds.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/40 bg-primary/10 p-3 text-sm text-foreground">
+                <span>يوجد {dupIds.length} تقرير مرفوع أكثر من مرة، ما يكرر المهام والتوصيات.</span>
+                <Button size="sm" onClick={removeDuplicates} className="mr-auto">احذف النسخ المكررة</Button>
+              </div>
+            )}
 
             {comparison && <ComparisonPanel names={comparison.names} c={comparison.c} />}
 
