@@ -15,6 +15,7 @@ import { Route as AnalyzeRouteImport } from './routes/analyze'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DecisionsRouteImport } from './routes/decisions'
+import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as AnalysesIdRouteImport } from './routes/analyses.$id'
 
@@ -48,6 +49,11 @@ const DecisionsRoute = DecisionsRouteImport.update({
   path: '/decisions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExecutiveRoute = ExecutiveRouteImport.update({
+  id: '/executive',
+  path: '/executive',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/decisions': typeof DecisionsRoute
+  '/executive': typeof ExecutiveRoute
   '/tasks': typeof TasksRoute
   '/analyses/$id': typeof AnalysesIdRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/decisions': typeof DecisionsRoute
+  '/executive': typeof ExecutiveRoute
   '/tasks': typeof TasksRoute
   '/analyses/$id': typeof AnalysesIdRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/decisions': typeof DecisionsRoute
+  '/executive': typeof ExecutiveRoute
   '/tasks': typeof TasksRoute
   '/analyses/$id': typeof AnalysesIdRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/decisions'
+    | '/executive'
     | '/tasks'
     | '/analyses/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/decisions'
+    | '/executive'
     | '/tasks'
     | '/analyses/$id'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/decisions'
+    | '/executive'
     | '/tasks'
     | '/analyses/$id'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   DecisionsRoute: typeof DecisionsRoute
+  ExecutiveRoute: typeof ExecutiveRoute
   TasksRoute: typeof TasksRoute
   AnalysesIdRoute: typeof AnalysesIdRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DecisionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/executive': {
+      id: '/executive'
+      path: '/executive'
+      fullPath: '/executive'
+      preLoaderRoute: typeof ExecutiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tasks': {
       id: '/tasks'
       path: '/tasks'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   DecisionsRoute: DecisionsRoute,
+  ExecutiveRoute: ExecutiveRoute,
   TasksRoute: TasksRoute,
   AnalysesIdRoute: AnalysesIdRoute,
 }
