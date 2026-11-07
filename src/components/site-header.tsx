@@ -9,6 +9,7 @@ const nav = [
   { to: "/analyze", label: "تحليل جديد" },
   { to: "/decisions", label: "القرارات" },
   { to: "/tasks", label: "المهام" },
+  { to: "/executive", label: "التقرير التنفيذي" },
 ] as const;
 
 const linkCls = "whitespace-nowrap rounded-lg px-2.5 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:px-3";

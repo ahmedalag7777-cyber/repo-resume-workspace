@@ -26,5 +26,6 @@ Per أمر تنفيذي عاجل + Supplement V6: freeze feature work; INSPECT �
 - [x] Workspace cycle 2026-11-05: dashboard (reports, search, delete, urgent tasks), persistent meaning memory, verified two-report comparison, admin panel; 55 tests + signed-in flow verified.
 - [ ] P1 broader acceptance: calibrated meanings, units and multi-report relationships remain unverified.
 - [x] Decision inbox (native rebuild of Report-Advisor DecisionInbox) 2026-11-06.
+- [x] Executive report /executive (decisions, overdue tasks, documented outcomes, print) 2026-11-06.
 - [ ] Then resume: port remaining Report-Advisor screens, admin panel, inner-page redesign, outcome capture (deferred by the order)
 - [x] User request 2026-11-02: substantial verified improvement delivered this cycle (meanings, relationships, refresh fix).
